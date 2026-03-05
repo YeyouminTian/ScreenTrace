@@ -1,0 +1,54 @@
+{
+  "screenshot": {
+    "interval_minutes": 10,
+    "similarity_threshold": 0.85,
+    "skip_if_last_within_minutes": 2,
+    "image_quality": 85,
+    "max_resolution": [1920, 1080]
+  },
+
+  "privacy": {
+    "blacklist_apps": [
+      "1Password.exe",
+      "Bitwarden.exe",
+      "KeePass.exe"
+    ],
+    "blacklist_title_keywords": [
+      "密码", "银行", "支付", "private", "password"
+    ],
+    "blacklist_content_keywords": [
+      "password", "secret", "token", "key"
+    ],
+    "enable_content_ocr": false
+  },
+
+  "api": {
+    "provider": "openai",
+    "api_key": "YOUR_API_KEY_HERE",
+    "model": "gpt-4-vision-preview",
+    "base_url": "https://api.openai.com/v1",
+    "max_tokens": 500,
+    "timeout_seconds": 30,
+    "retry_times": 3
+  },
+
+  "storage": {
+    "database_path": "./data/screenTrace.db",
+    "screenshot_path": "./data/screenshots",
+    "retention_days": 90,
+    "auto_cleanup": true,
+    "cleanup_time": "03:00"
+  },
+
+  "report": {
+    "default_time_range": "week",
+    "output_format": "markdown",
+    "include_screenshots": false
+  },
+
+  "dashboard": {
+    "port": 8080,
+    "auto_open_browser": false,
+    "theme": "light"
+  }
+}

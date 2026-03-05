@@ -1,0 +1,20 @@
+# Core dependencies
+Pillow>=10.0.0
+pywin32>=305
+imagehash>=4.3.1
+requests>=2.31.0
+Flask>=3.0.0
+plotly>=5.18.0
+python-dotenv>=1.0.0
+cryptography>=41.0.0
+
+# Optional dependencies
+pytesseract>=0.3.10
+opencv-python>=4.8.0
+
+# Development dependencies
+PyInstaller>=6.0.0
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+pyautogui>=0.9.54
