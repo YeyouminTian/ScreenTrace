@@ -122,6 +122,36 @@ class DashboardApp:
                     'error': str(e)
                 })
 
+        @self.app.route('/api/recent-activities')
+        def api_recent_activities():
+            """最近活动API"""
+            try:
+                limit = request.args.get('limit', 20, type=int)
+
+                screenshots = self.db_manager.get_screenshots(limit=limit)
+
+                activities = []
+                for record in screenshots:
+                    activities.append({
+                        'timestamp': record['timestamp'],
+                        'app': record.get('app_name', 'Unknown'),
+                        'category': record.get('life_category', 'N/A'),
+                        'form': record.get('activity_form', 'N/A'),
+                        'description': record.get('description', 'N/A')
+                    })
+
+                return jsonify({
+                    'success': True,
+                    'data': activities
+                })
+
+            except Exception as e:
+                logger.error(f"获取最近活动失败: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                })
+
         @self.app.route('/api/chart/category-pie')
         def api_chart_category_pie():
             """生活维度饼图API"""

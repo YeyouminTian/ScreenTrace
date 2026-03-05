@@ -54,7 +54,7 @@ class VisualizationGenerator:
         # 统计各维度
         category_count = {}
         for record in screenshots:
-            category = record.get('life_category', '未知')
+            category = record.get('life_category') or '未知'  # 修复：None转为'未知'
             category_count[category] = category_count.get(category, 0) + 1
 
         # 创建饼图
@@ -108,7 +108,7 @@ class VisualizationGenerator:
         for record in screenshots:
             timestamp = datetime.fromisoformat(record['timestamp'])
             date_str = timestamp.strftime('%Y-%m-%d')
-            category = record.get('life_category', '未知')
+            category = record.get('life_category') or '未知'  # 修复：None转为'未知'
 
             if date_str not in daily_stats:
                 daily_stats[date_str] = {}
@@ -126,7 +126,10 @@ class VisualizationGenerator:
 
         colors = px.colors.qualitative.Set2
 
-        for i, category in enumerate(sorted(all_categories)):
+        # 修复：过滤None并排序
+        sorted_categories = sorted([c for c in all_categories if c is not None])
+
+        for i, category in enumerate(sorted_categories):
             values = [daily_stats[date].get(category, 0) for date in dates]
 
             fig.add_trace(go.Bar(
@@ -236,7 +239,7 @@ class VisualizationGenerator:
         for record in screenshots:
             timestamp = datetime.fromisoformat(record['timestamp'])
             date_str = timestamp.strftime('%m-%d')
-            category = record.get('life_category', '未知')
+            category = record.get('life_category') or '未知'  # 修复：None转为'未知'
 
             if date_str not in daily_stats:
                 daily_stats[date_str] = {}
@@ -254,7 +257,10 @@ class VisualizationGenerator:
 
         colors = px.colors.qualitative.Set1
 
-        for i, category in enumerate(sorted(all_categories)):
+        # 修复：过滤None并排序
+        sorted_categories = sorted([c for c in all_categories if c is not None])
+
+        for i, category in enumerate(sorted_categories):
             values = [daily_stats[date].get(category, 0) for date in dates]
 
             fig.add_trace(go.Scatter(
@@ -367,8 +373,8 @@ class VisualizationGenerator:
         app_count = {}
 
         for record in screenshots:
-            category = record.get('life_category', '未知')
-            app = record.get('app_name', '未知')
+            category = record.get('life_category') or '未知'  # 修复：None转为'未知'
+            app = record.get('app_name') or '未知'
 
             category_count[category] = category_count.get(category, 0) + 1
             app_count[app] = app_count.get(app, 0) + 1
