@@ -54,7 +54,7 @@ class StatisticsAnalyzer:
         })
 
         for record in screenshots:
-            category = record.get('life_category', '未知')
+            category = record.get('life_category') or '未知'
             if category:
                 category_stats[category]['count'] += 1
                 category_stats[category]['screenshots'].append(record)
@@ -106,7 +106,7 @@ class StatisticsAnalyzer:
         form_stats = defaultdict(int)
 
         for record in screenshots:
-            form = record.get('activity_form', '未知')
+            form = record.get('activity_form') or '未知'
             if form:
                 form_stats[form] += 1
 

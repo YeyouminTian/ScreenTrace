@@ -75,7 +75,7 @@ class VisualizationGenerator:
             height=500
         )
 
-        return fig.to_html(include_plotlyjs=True, full_html=False)
+        return fig.to_html(include_plotlyjs=False, full_html=False)
 
     def generate_daily_bar_chart(
         self,
@@ -148,7 +148,7 @@ class VisualizationGenerator:
             xaxis=dict(tickangle=-45)
         )
 
-        return fig.to_html(include_plotlyjs=True, full_html=False)
+        return fig.to_html(include_plotlyjs=False, full_html=False)
 
     def generate_hourly_heatmap(
         self,
@@ -205,7 +205,7 @@ class VisualizationGenerator:
             height=400
         )
 
-        return fig.to_html(include_plotlyjs=True, full_html=False)
+        return fig.to_html(include_plotlyjs=False, full_html=False)
 
     def generate_trend_line_chart(
         self,
@@ -280,7 +280,7 @@ class VisualizationGenerator:
             hovermode='x unified'
         )
 
-        return fig.to_html(include_plotlyjs=True, full_html=False)
+        return fig.to_html(include_plotlyjs=False, full_html=False)
 
     def generate_app_usage_chart(
         self,
@@ -342,7 +342,7 @@ class VisualizationGenerator:
             yaxis=dict(autorange="reversed")  # 从上到下排序
         )
 
-        return fig.to_html(include_plotlyjs=True, full_html=False)
+        return fig.to_html(include_plotlyjs=False, full_html=False)
 
     def generate_combined_dashboard(
         self,
@@ -456,7 +456,7 @@ class VisualizationGenerator:
             title_text="ScreenTrace 统计仪表板"
         )
 
-        return fig.to_html(include_plotlyjs=True, full_html=False)
+        return fig.to_html(include_plotlyjs=False, full_html=False)
 
     def _generate_empty_chart(self, message: str) -> str:
         """
@@ -486,4 +486,4 @@ class VisualizationGenerator:
             yaxis=dict(showgrid=False, showticklabels=False)
         )
 
-        return fig.to_html(include_plotlyjs=True, full_html=False)
+        return fig.to_html(include_plotlyjs=False, full_html=False)

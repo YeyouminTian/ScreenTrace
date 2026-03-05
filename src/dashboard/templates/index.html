@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ScreenTrace - 统计面板</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -363,11 +365,12 @@
     <script>
         let autoRefreshTimer = null;
 
-        // 页面加载时初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        // 页面加载时初始化（等待所有资源加载完成，包括Plotly库）
+        window.onload = function() {
+            console.log('Window loaded, Plotly available:', typeof Plotly !== 'undefined');
             loadAllData();
             setupAutoRefresh();
-        });
+        };
 
         // 设置自动刷新
         function setupAutoRefresh() {
@@ -558,7 +561,9 @@
             try {
                 const response = await fetch(`/api/chart/category-pie?days=${days}`);
                 const html = await response.text();
-                document.getElementById('categoryPieChart').innerHTML = html;
+                const container = document.getElementById('categoryPieChart');
+                container.innerHTML = html;
+                executeScripts(container);
             } catch (error) {
                 document.getElementById('categoryPieChart').innerHTML = '<div class="error">加载失败</div>';
             }
@@ -569,7 +574,9 @@
             try {
                 const response = await fetch(`/api/chart/daily-bar?days=${days}`);
                 const html = await response.text();
-                document.getElementById('dailyBarChart').innerHTML = html;
+                const container = document.getElementById('dailyBarChart');
+                container.innerHTML = html;
+                executeScripts(container);
             } catch (error) {
                 document.getElementById('dailyBarChart').innerHTML = '<div class="error">加载失败</div>';
             }
@@ -580,7 +587,9 @@
             try {
                 const response = await fetch(`/api/chart/heatmap?days=${days}`);
                 const html = await response.text();
-                document.getElementById('heatmapChart').innerHTML = html;
+                const container = document.getElementById('heatmapChart');
+                container.innerHTML = html;
+                executeScripts(container);
             } catch (error) {
                 document.getElementById('heatmapChart').innerHTML = '<div class="error">加载失败</div>';
             }
@@ -591,7 +600,9 @@
             try {
                 const response = await fetch(`/api/chart/trend?days=${days}`);
                 const html = await response.text();
-                document.getElementById('trendChart').innerHTML = html;
+                const container = document.getElementById('trendChart');
+                container.innerHTML = html;
+                executeScripts(container);
             } catch (error) {
                 document.getElementById('trendChart').innerHTML = '<div class="error">加载失败</div>';
             }
@@ -602,10 +613,26 @@
             try {
                 const response = await fetch(`/api/chart/dashboard?days=${days}`);
                 const html = await response.text();
-                document.getElementById('appUsageChart').innerHTML = html;
+                const container = document.getElementById('appUsageChart');
+                container.innerHTML = html;
+                executeScripts(container);
             } catch (error) {
                 document.getElementById('appUsageChart').innerHTML = '<div class="error">加载失败</div>';
             }
+        }
+
+        // 执行容器内的script标签
+        function executeScripts(container) {
+            const scripts = container.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
         }
     </script>
 </body>

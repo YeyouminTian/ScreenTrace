@@ -189,7 +189,16 @@ class DatabaseManager:
             record = dict(row)
             # 解析JSON字段
             if record['keywords']:
-                record['keywords'] = json.loads(record['keywords'])
+                try:
+                    record['keywords'] = json.loads(record['keywords'])
+                except (json.JSONDecodeError, TypeError):
+                    # 如果JSON解析失败，尝试用ast.literal_eval解析Python列表字符串
+                    try:
+                        import ast
+                        record['keywords'] = ast.literal_eval(record['keywords'])
+                    except (ValueError, SyntaxError):
+                        # 如果还是失败，设置为空列表
+                        record['keywords'] = []
             results.append(record)
 
         return results
@@ -223,7 +232,7 @@ class DatabaseManager:
             ORDER BY count DESC
         """, params)
 
-        life_category_stats = {row['life_category']: row['count'] for row in cursor.fetchall()}
+        life_category_stats = {row['life_category'] if row['life_category'] else 'N/A': row['count'] for row in cursor.fetchall()}
 
         # 按活动形式统计
         cursor.execute(f"""
@@ -234,7 +243,7 @@ class DatabaseManager:
             ORDER BY count DESC
         """, params)
 
-        activity_form_stats = {row['activity_form']: row['count'] for row in cursor.fetchall()}
+        activity_form_stats = {row['activity_form'] if row['activity_form'] else 'N/A': row['count'] for row in cursor.fetchall()}
 
         # 按应用统计TOP 10
         cursor.execute(f"""
@@ -246,7 +255,7 @@ class DatabaseManager:
             LIMIT 10
         """, params)
 
-        app_stats = {row['app_name']: row['count'] for row in cursor.fetchall()}
+        app_stats = {row['app_name'] if row['app_name'] else 'Unknown': row['count'] for row in cursor.fetchall()}
 
         # 总记录数
         cursor.execute(f"""

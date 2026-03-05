@@ -40,6 +40,14 @@ class DashboardApp:
         # 注册路由
         self._register_routes()
 
+        # 添加CORS支持
+        @self.app.after_request
+        def after_request(response):
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+            response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+            return response
+
     def _register_routes(self):
         """注册Flask路由"""
 
