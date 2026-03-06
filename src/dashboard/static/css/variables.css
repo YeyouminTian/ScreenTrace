@@ -1,149 +1,215 @@
 /**
- * CSS变量系统
- * 定义全局设计token：颜色、间距、字体、圆角、阴影等
+ * CSS变量系统 - Editorial Magazine 设计语言
+ * 重新定义视觉体验
  */
 
 :root {
   /* ========== 配色系统 - 浅色模式 ========== */
-  /* 背景色 */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8f9fa;
-  --color-bg-tertiary: #e9ecef;
+  /* 主色调：Midnight Blue - 深邃专业 */
+  --color-primary: #1a1f3a;
+  --color-primary-light: #2d3561;
+  --color-primary-lighter: #4a5578;
 
-  /* 文字色 */
-  --color-text-primary: #1d1d1f;      /* 苹果标准黑 */
-  --color-text-secondary: #6e6e73;    /* 苹果灰 */
-  --color-text-tertiary: #86868b;     /* 浅灰 */
+  /* 强调色：Coral Orange - 温暖活力 */
+  --color-accent: #ff6b4a;
+  --color-accent-light: #ff8f73;
+  --color-accent-dark: #e5563a;
 
-  /* 强调色 */
-  --color-accent-primary: #0071e3;    /* 苹果蓝 */
-  --color-accent-secondary: #147ce5;  /* 浅蓝 */
-  --color-accent-tertiary: #e8f4fd;   /* 极浅蓝 */
+  /* 辅助色：Mint Green - 清新生机 */
+  --color-secondary: #4ecdc4;
+  --color-secondary-light: #7ee8e1;
+  --color-secondary-dark: #3db9b0;
 
-  /* 边框色 */
-  --color-border-light: rgba(0, 0, 0, 0.08);
-  --color-border-medium: rgba(0, 0, 0, 0.12);
+  /* 背景色系统 - 更有质感的灰度 */
+  --color-bg-primary: #fafbfc;
+  --color-bg-secondary: #f4f6f9;
+  --color-bg-tertiary: #eef1f5;
+  --color-bg-elevated: #ffffff;
 
-  /* 阴影色 */
-  --color-shadow-light: rgba(0, 0, 0, 0.04);
-  --color-shadow-medium: rgba(0, 0, 0, 0.08);
-  --color-shadow-heavy: rgba(0, 0, 0, 0.16);
+  /* 文字色 - 更细腻的层次 */
+  --color-text-primary: #0d1117;
+  --color-text-secondary: #4a5568;
+  --color-text-tertiary: #718096;
+  --color-text-muted: #a0aec0;
 
-  /* ========== 间距系统 ========== */
+  /* 功能色 */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* 渐变色 - 用于特殊效果 */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-light) 100%);
+  --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-subtle: linear-gradient(180deg, rgba(26, 31, 58, 0.02) 0%, rgba(26, 31, 58, 0.05) 100%);
+
+  /* ========== 间距系统 - 更大胆的留白 ========== */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-  --spacing-xxl: 48px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+  --spacing-4xl: 96px;
 
-  /* ========== 字体系统 ========== */
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  /* ========== 字体系统 - Editorial 风格 ========== */
+  /* 主字体：Manrope - 现代、几何、专业 */
+  --font-primary: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  --font-size-xs: 12px;
-  --font-size-sm: 14px;
-  --font-size-md: 16px;
-  --font-size-lg: 18px;
-  --font-size-xl: 24px;
-  --font-size-xxl: 32px;
-  --font-size-xxxl: 36px;
+  /* 装饰字体：Crimson Pro - 优雅、editorial */
+  --font-display: 'Crimson Pro', 'Georgia', serif;
 
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
+  /* 等宽字体：JetBrains Mono - 代码、数据 */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 
-  /* ========== 圆角系统 ========== */
-  --radius-sm: 8px;
-  --radius-md: 12px;
+  /* 字号系统 - 杂志式的尺度 */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+  --text-5xl: 3rem;       /* 48px */
+  --text-6xl: 3.75rem;    /* 60px */
+  --text-7xl: 4.5rem;     /* 72px */
+
+  /* 字重 */
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  /* 行高 */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* 字间距 */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* ========== 圆角系统 - 更柔和的曲线 ========== */
+  --radius-sm: 6px;
+  --radius-md: 10px;
   --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-xxl: 24px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-full: 9999px;
 
-  /* ========== 阴影系统 ========== */
-  --shadow-sm: 0 2px 8px var(--color-shadow-light);
-  --shadow-md: 0 4px 16px var(--color-shadow-medium);
-  --shadow-lg: 0 8px 24px var(--color-shadow-heavy);
-  --shadow-xl: 0 16px 48px var(--color-shadow-heavy);
+  /* ========== 阴影系统 - 更立体的层次 ========== */
+  --shadow-xs: 0 1px 2px 0 rgba(26, 31, 58, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(26, 31, 58, 0.1), 0 1px 2px 0 rgba(26, 31, 58, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(26, 31, 58, 0.1), 0 2px 4px -1px rgba(26, 31, 58, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(26, 31, 58, 0.1), 0 4px 6px -2px rgba(26, 31, 58, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(26, 31, 58, 0.1), 0 10px 10px -5px rgba(26, 31, 58, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(26, 31, 58, 0.25);
 
-  /* 多层阴影（苹果风格） */
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06),
-                 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-card-hover: 0 8px 16px rgba(0, 0, 0, 0.08),
-                       0 24px 48px rgba(0, 0, 0, 0.12);
+  /* 内发光效果 - 用于卡片 */
+  --shadow-inner: inset 0 2px 4px 0 rgba(26, 31, 58, 0.06);
+  --shadow-inner-lg: inset 0 4px 8px 0 rgba(26, 31, 58, 0.1);
 
-  /* ========== 动画系统 ========== */
-  --transition-fast: 0.2s ease;
-  --transition-normal: 0.3s ease;
-  --transition-slow: 0.5s ease;
+  /* ========== 动画系统 - 流畅优雅 ========== */
+  --duration-75: 75ms;
+  --duration-100: 100ms;
+  --duration-150: 150ms;
+  --duration-200: 200ms;
+  --duration-300: 300ms;
+  --duration-500: 500ms;
+  --duration-700: 700ms;
+  --duration-1000: 1000ms;
 
-  /* 贝塞尔曲线（苹果风格） */
-  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
 
   /* ========== 布局系统 ========== */
-  --max-width: 1400px;
-  --header-height: 120px;
-  --sidebar-width: 240px;
+  --max-width: 1440px;
+  --max-width-prose: 65ch;
+  --header-height: 80px;
+  --sidebar-width: 280px;
 
   /* ========== 毛玻璃效果 ========== */
-  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-blur: 20px;
   --glass-saturate: 180%;
 
   /* ========== z-index层级 ========== */
-  --z-dropdown: 1000;
-  --z-sticky: 1020;
-  --z-fixed: 1030;
-  --z-modal-backdrop: 1040;
-  --z-modal: 1050;
-  --z-popover: 1060;
-  --z-tooltip: 1070;
-  --z-toast: 1080;
+  --z-base: 0;
+  --z-elevated: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-overlay: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+  --z-toast: 800;
+
+  /* ========== 特殊效果 ========== */
+  --noise-opacity: 0.03;
+  --dot-pattern-opacity: 0.04;
 }
 
 /* ========== 暗色模式 ========== */
 [data-theme="dark"] {
-  /* 背景色 */
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #1c1c1e;
-  --color-bg-tertiary: #2c2c2e;
+  /* 暗色主色调 */
+  --color-primary: #818cf8;
+  --color-primary-light: #a5b4fc;
+  --color-primary-lighter: #c7d2fe;
 
-  /* 文字色 */
-  --color-text-primary: #f5f5f7;
-  --color-text-secondary: #a1a1a6;
-  --color-text-tertiary: #6e6e73;
+  /* 暗色强调色 */
+  --color-accent: #f97316;
+  --color-accent-light: #fb923c;
+  --color-accent-dark: #ea580c;
 
-  /* 强调色 */
-  --color-accent-primary: #0a84ff;
-  --color-accent-secondary: #409cff;
-  --color-accent-tertiary: #1c3e5f;
+  /* 暗色背景 - 深邃优雅 */
+  --color-bg-primary: #0a0e1a;
+  --color-bg-secondary: #111827;
+  --color-bg-tertiary: #1f2937;
+  --color-bg-elevated: #1f2937;
 
-  /* 边框色 */
-  --color-border-light: rgba(255, 255, 255, 0.1);
-  --color-border-medium: rgba(255, 255, 255, 0.15);
+  /* 暗色文字 */
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
+  --color-text-muted: #6b7280;
 
-  /* 阴影色 */
-  --color-shadow-light: rgba(0, 0, 0, 0.2);
-  --color-shadow-medium: rgba(0, 0, 0, 0.3);
-  --color-shadow-heavy: rgba(0, 0, 0, 0.5);
+  /* 暗色渐变 */
+  --gradient-hero: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-subtle: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
 
-  /* 阴影 */
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3),
-                 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-card-hover: 0 8px 16px rgba(0, 0, 0, 0.5),
-                       0 24px 48px rgba(0, 0, 0, 0.7);
+  /* 暗色阴影 */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
 
-  /* 毛玻璃 */
-  --glass-bg: rgba(28, 28, 30, 0.72);
+  /* 暗色毛玻璃 */
+  --glass-bg: rgba(17, 24, 39, 0.8);
 }
 
-/* ========== 响应式断点（作为CSS变量） ========== */
+/* ========== 响应式断点 ========== */
 :root {
-  --breakpoint-sm: 576px;
+  --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
-  --breakpoint-lg: 992px;
-  --breakpoint-xl: 1200px;
-  --breakpoint-xxl: 1400px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
 }

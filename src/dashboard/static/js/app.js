@@ -108,24 +108,54 @@ class App {
     const container = document.getElementById('recentActivityList');
 
     if (activities.length === 0) {
-      container.innerHTML = '<div class="no-data">暂无数据</div>';
+      container.innerHTML = `
+        <div style="text-align: center; padding: var(--spacing-2xl); color: var(--color-text-tertiary);">
+          暂无活动数据
+        </div>
+      `;
       return;
     }
 
     const html = activities.map(activity => {
       const time = activity.timestamp.substring(11, 19);
+      const date = activity.timestamp.substring(0, 10);
       const icon = this.getCategoryIcon(activity.category);
 
       return `
-        <div class="activity-item">
-          <div class="activity-time">${time}</div>
-          <div class="activity-icon">${icon}</div>
-          <div class="activity-content">
-            <div class="activity-app">${activity.app}</div>
-            <div class="activity-desc">${activity.description}</div>
+        <article class="stat-card" style="padding: var(--spacing-lg); cursor: pointer;">
+          <div style="display: grid; grid-template-columns: auto 1fr auto; gap: var(--spacing-lg); align-items: center;">
+            <div style="text-align: center; min-width: 80px;">
+              <div style="font-size: var(--text-2xl); margin-bottom: var(--spacing-xs);">${icon}</div>
+              <div style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-tertiary);">${time}</div>
+            </div>
+
+            <div>
+              <div style="font-weight: var(--font-semibold); font-size: var(--text-lg); margin-bottom: var(--spacing-xs); color: var(--color-text-primary);">
+                ${activity.app}
+              </div>
+              <div style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--spacing-xs);">
+                ${activity.description || '无描述'}
+              </div>
+              <div style="font-size: var(--text-xs); color: var(--color-text-tertiary);">
+                ${activity.form || 'N/A'}
+              </div>
+            </div>
+
+            <div style="text-align: right;">
+              <span style="
+                display: inline-block;
+                padding: var(--spacing-xs) var(--spacing-md);
+                background: var(--color-bg-secondary);
+                border-radius: var(--radius-full);
+                font-size: var(--text-sm);
+                font-weight: var(--font-medium);
+                color: var(--color-primary);
+              ">
+                ${activity.category}
+              </span>
+            </div>
           </div>
-          <div class="activity-category">${activity.category}</div>
-        </div>
+        </article>
       `;
     }).join('');
 
@@ -274,6 +304,27 @@ class App {
     const checkbox = document.getElementById('autoRefresh');
     const intervalSelect = document.getElementById('refreshInterval');
     const timeRangeSelect = document.getElementById('timeRange');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    // 手动刷新按钮
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        const btnText = refreshBtn.innerHTML;
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="spin">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="32"/>
+          </svg>
+          刷新中...
+        `;
+
+        await this.loadAllData();
+        showSuccess('数据已刷新');
+
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = btnText;
+      });
+    }
 
     // 监听checkbox变化
     checkbox.addEventListener('change', () => {
@@ -288,6 +339,7 @@ class App {
 
     // 监听刷新间隔变化
     intervalSelect.addEventListener('change', () => {
+      appState.set('refreshInterval', parseInt(intervalSelect.value));
       if (checkbox.checked) {
         this.stopAutoRefresh();
         this.startAutoRefresh();

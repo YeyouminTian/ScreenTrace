@@ -1,143 +1,211 @@
-<!-- ========== 新版本v2.0 - 苹果风格UI ========== -->
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScreenTrace - 智能时间管理</title>
+    <title>ScreenTrace — 你的数字生活编年史</title>
 
-    <!-- Plotly.js -->
+    <!-- Meta Tags -->
+    <meta name="description" content="ScreenTrace - 智能屏幕活动追踪与时间管理工具，帮助你理解时间流向，优化生活节奏">
+    <meta name="theme-color" content="#1a1f3a">
+
+    <!-- Fonts & Plotly -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
-    <!-- 模块化CSS -->
+    <!-- Styles -->
     <link rel="stylesheet" href="/static/css/main.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱</text></svg>">
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <h1>📊 ScreenTrace</h1>
-            <p>智能屏幕活动追踪与分析</p>
-        </div>
+    <!-- ========== Header ========== -->
+    <header class="header" role="banner">
+        <div class="header-inner">
+            <div class="brand">
+                <h1 class="brand-name">ScreenTrace</h1>
+                <span class="brand-tagline">数字生活编年史</span>
+            </div>
 
-        <!-- 主题切换按钮 -->
-        <div class="theme-toggle">
-            <button id="themeToggle" aria-label="切换主题">
-                <span class="theme-icon">🌙</span>
-            </button>
+            <nav class="header-nav">
+                <button class="btn btn-secondary" id="themeToggle" aria-label="切换主题">
+                    <span class="theme-icon">☀️</span>
+                </button>
+            </nav>
         </div>
     </header>
 
-    <!-- 主容器 -->
-    <div class="container">
-        <!-- 控制栏 -->
-        <div class="controls">
-            <div class="controls-left">
-                <label for="timeRange">时间范围：</label>
-                <select id="timeRange">
-                    <option value="1" selected>今天</option>
-                    <option value="7">最近7天</option>
-                    <option value="14">最近14天</option>
-                    <option value="30">最近30天</option>
-                </select>
-                <button class="btn-primary" onclick="app.loadAllData()">
-                    🔄 手动刷新
-                </button>
-            </div>
+    <!-- ========== Hero Section ========== -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2 class="hero-title">理解你的时间</h2>
+            <p class="hero-subtitle">
+                用数据讲述你的数字生活故事
+            </p>
 
-            <div class="controls-right">
-                <div class="auto-refresh-toggle">
-                    <input type="checkbox" id="autoRefresh" checked>
-                    <label for="autoRefresh">自动刷新</label>
+            <!-- Controls Bar -->
+            <div class="controls-bar">
+                <div class="control-group">
+                    <label class="control-label" for="timeRange">时间范围</label>
+                    <select id="timeRange" class="btn btn-secondary">
+                        <option value="1">今天</option>
+                        <option value="7" selected>最近7天</option>
+                        <option value="14">最近14天</option>
+                        <option value="30">最近30天</option>
+                    </select>
                 </div>
-                <select id="refreshInterval">
-                    <option value="5">5秒</option>
-                    <option value="10" selected>10秒</option>
-                    <option value="30">30秒</option>
-                    <option value="60">60秒</option>
-                </select>
-                <span class="last-update" id="lastUpdate">最后更新: --</span>
-            </div>
-        </div>
 
-        <!-- 统计卡片 -->
-        <div class="stats-cards">
-            <div class="stat-card" data-id="totalCount">
-                <h3>总活动次数</h3>
-                <div class="value" id="totalCount">-</div>
-                <div class="label">截图记录</div>
-            </div>
-            <div class="stat-card" data-id="mainCategory">
-                <h3>主要活动</h3>
-                <div class="value" id="mainCategory">-</div>
-                <div class="label">生活维度</div>
-            </div>
-            <div class="stat-card" data-id="topApp">
-                <h3>常用应用</h3>
-                <div class="value" id="topApp">-</div>
-                <div class="label">使用最多</div>
-            </div>
-            <div class="stat-card" data-id="deepWork">
-                <h3>深度工作</h3>
-                <div class="value" id="deepWork">-</div>
-                <div class="label">会话次数</div>
-            </div>
-        </div>
+                <div class="control-group">
+                    <button class="btn btn-primary" id="refreshBtn">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M14 2V6H10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        刷新数据
+                    </button>
+                </div>
 
-        <!-- 最近活动 -->
-        <div class="recent-activity">
-            <h2>🆕 最近活动</h2>
-            <div class="activity-list" id="recentActivityList">
-                <div class="no-data">加载中...</div>
-            </div>
-        </div>
-
-        <!-- 图表网格 -->
-        <div class="charts-grid">
-            <div class="chart-container">
-                <h2>生活维度分布</h2>
-                <div id="categoryPieChart">
-                    <div class="skeleton skeleton-chart"></div>
+                <div class="control-group" style="margin-left: auto;">
+                    <input type="checkbox" id="autoRefresh" checked style="cursor: pointer;">
+                    <label for="autoRefresh" class="control-label" style="cursor: pointer;">自动刷新</label>
+                    <select id="refreshInterval" class="btn btn-secondary">
+                        <option value="5">5秒</option>
+                        <option value="10" selected>10秒</option>
+                        <option value="30">30秒</option>
+                        <option value="60">60秒</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="chart-container">
-                <h2>每日活动统计</h2>
-                <div id="dailyBarChart">
-                    <div class="skeleton skeleton-chart"></div>
-                </div>
-            </div>
+            <p class="last-update" id="lastUpdate" style="font-size: var(--text-sm); color: var(--color-text-tertiary); margin-top: var(--spacing-md);">
+                最后更新: —
+            </p>
+        </div>
+    </section>
 
-            <div class="chart-container">
-                <h2>活动时段热力图</h2>
-                <div id="heatmapChart">
-                    <div class="skeleton skeleton-chart"></div>
-                </div>
-            </div>
+    <!-- ========== Stats Section ========== -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <article class="stat-card">
+                    <div class="stat-label">总活动次数</div>
+                    <div class="stat-value text-mono" id="totalCount">—</div>
+                    <div class="stat-change positive" id="totalCountChange">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 3L8 13M8 3L4 7M8 3L12 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>+12%</span>
+                    </div>
+                </article>
 
-            <div class="chart-container">
-                <h2>活动趋势</h2>
-                <div id="trendChart">
-                    <div class="skeleton skeleton-chart"></div>
-                </div>
+                <article class="stat-card">
+                    <div class="stat-label">主要活动</div>
+                    <div class="stat-value text-display" id="mainCategory" style="font-size: var(--text-4xl);">—</div>
+                    <div style="font-size: var(--text-sm); color: var(--color-text-tertiary);">生活维度</div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-label">常用应用</div>
+                    <div class="stat-value text-mono" id="topApp" style="font-size: var(--text-3xl);">—</div>
+                    <div style="font-size: var(--text-sm); color: var(--color-text-tertiary);">使用最多</div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-label">深度工作</div>
+                    <div class="stat-value text-mono" id="deepWork">—</div>
+                    <div style="font-size: var(--text-sm); color: var(--color-text-tertiary);">专注会话</div>
+                </article>
             </div>
         </div>
+    </section>
 
-        <!-- 应用使用统计 -->
-        <div class="chart-container">
-            <h2>应用使用统计</h2>
-            <div id="appUsageChart">
-                <div class="skeleton skeleton-chart"></div>
+    <!-- ========== Charts Section ========== -->
+    <section class="charts-section">
+        <div class="container">
+            <header class="section-header">
+                <h3 class="section-title">数据洞察</h3>
+            </header>
+
+            <div class="charts-grid">
+                <!-- Chart 1: Category Pie -->
+                <article class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">生活维度分布</h4>
+                    </div>
+                    <div class="chart-container" id="categoryPieChart">
+                        <div class="skeleton" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </article>
+
+                <!-- Chart 2: Daily Bar -->
+                <article class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">每日活动统计</h4>
+                    </div>
+                    <div class="chart-container" id="dailyBarChart">
+                        <div class="skeleton" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </article>
+
+                <!-- Chart 3: Heatmap -->
+                <article class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">活动时段热力图</h4>
+                    </div>
+                    <div class="chart-container" id="heatmapChart">
+                        <div class="skeleton" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </article>
+
+                <!-- Chart 4: Trend -->
+                <article class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">活动趋势</h4>
+                    </div>
+                    <div class="chart-container" id="trendChart">
+                        <div class="skeleton" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </article>
+
+                <!-- Chart 5: App Usage (Full Width) -->
+                <article class="chart-card full-width">
+                    <div class="chart-header">
+                        <h4 class="chart-title">应用使用统计</h4>
+                    </div>
+                    <div class="chart-container" id="appUsageChart">
+                        <div class="skeleton" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </article>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Footer -->
-    <footer>
-        <p>ScreenTrace v1.0 | 智能时间管理工具</p>
+    <!-- ========== Recent Activity Section ========== -->
+    <section class="stats-section">
+        <div class="container">
+            <header class="section-header">
+                <h3 class="section-title">最近活动</h3>
+            </header>
+
+            <div class="activity-list" id="recentActivityList" style="display: grid; gap: var(--spacing-md);">
+                <!-- Activity items will be loaded here -->
+                <div class="skeleton" style="width: 100%; height: 60px;"></div>
+                <div class="skeleton" style="width: 100%; height: 60px;"></div>
+                <div class="skeleton" style="width: 100%; height: 60px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== Footer ========== -->
+    <footer class="footer">
+        <div class="container">
+            <p>ScreenTrace v1.0 — 用数据讲述你的数字生活故事</p>
+        </div>
     </footer>
 
-    <!-- 模块化JavaScript (ES6 Module) -->
+    <!-- ========== Scripts ========== -->
     <script type="module" src="/static/js/app.js"></script>
 </body>
 </html>
