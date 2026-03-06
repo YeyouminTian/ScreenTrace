@@ -6,6 +6,7 @@ Flask应用和API路由
 from flask import Flask, render_template, jsonify, request
 from datetime import datetime, timedelta
 from typing import Optional
+from pathlib import Path
 import logging
 
 from src.report.statistics import StatisticsAnalyzer
@@ -27,7 +28,25 @@ class DashboardApp:
             db_manager: 数据库管理器
             api_client: API客户端（可选）
         """
-        self.app = Flask(__name__)
+        # 获取当前文件所在目录
+        self.current_dir = Path(__file__).parent
+
+        # 调试：输出实际路径
+        logger.info(f"[Dashboard] 当前文件目录: {self.current_dir}")
+        logger.info(f"[Dashboard] 静态文件目录: {self.current_dir / 'static'}")
+        logger.info(f"[Dashboard] 模板目录: {self.current_dir / 'templates'}")
+
+        self.app = Flask(__name__,
+                        static_folder=str(self.current_dir / 'static'),
+                        static_url_path='/static',
+                        template_folder=str(self.current_dir / 'templates'))
+
+        # 禁用模板缓存（开发环境）
+        self.app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+        # 调试：输出Flask的模板路径
+        logger.info(f"[Dashboard] Flask template_folder: {self.app.template_folder}")
+
         self.db_manager = db_manager
         self.api_client = api_client
 
@@ -50,11 +69,16 @@ class DashboardApp:
 
     def _register_routes(self):
         """注册Flask路由"""
+        # 引用实例变量供路由函数使用
+        current_dir = self.current_dir
 
         @self.app.route('/')
         def index():
             """主页"""
-            return render_template('index.html')
+            # 使用绝对路径直接读取文件（绕过Flask模板缓存问题）
+            template_path = current_dir / 'templates' / 'index.html'
+            with open(template_path, 'r', encoding='utf-8') as f:
+                return f.read()
 
         @self.app.route('/api/stats/overview')
         def api_stats_overview():

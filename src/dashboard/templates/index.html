@@ -1,278 +1,36 @@
+<!-- ========== 新版本v2.0 - 苹果风格UI ========== -->
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScreenTrace - 统计面板</title>
+    <title>ScreenTrace - 智能时间管理</title>
+
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 0;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        header h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
-        header p {
-            opacity: 0.9;
-            font-size: 16px;
-        }
-
-        .controls {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .controls-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .controls-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .controls label {
-            margin-right: 5px;
-        }
-
-        .controls select, .controls button {
-            padding: 8px 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            margin-right: 10px;
-        }
-
-        .controls button {
-            background: #667eea;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .controls button:hover {
-            background: #5568d3;
-        }
-
-        .auto-refresh-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .auto-refresh-toggle input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .last-update {
-            color: #666;
-            font-size: 13px;
-        }
-
-        .recent-activity {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .recent-activity h2 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .activity-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.2s;
-        }
-
-        .activity-item:hover {
-            background: #f9f9f9;
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-time {
-            font-size: 13px;
-            color: #666;
-            min-width: 80px;
-        }
-
-        .activity-icon {
-            font-size: 24px;
-            margin: 0 15px;
-        }
-
-        .activity-content {
-            flex: 1;
-        }
-
-        .activity-app {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .activity-desc {
-            font-size: 15px;
-            color: #333;
-        }
-
-        .activity-category {
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background: #f0f0f0;
-            color: #666;
-        }
-
-        .no-data {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-card h3 {
-            color: #667eea;
-            font-size: 14px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        .stat-card .value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .stat-card .label {
-            color: #666;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .chart-container {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .chart-container h2 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-
-        .error {
-            background: #fee;
-            color: #c33;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #999;
-            margin-top: 40px;
-        }
-    </style>
+    <!-- 模块化CSS -->
+    <link rel="stylesheet" href="/static/css/main.css">
 </head>
 <body>
+    <!-- Header -->
     <header>
         <div class="container">
-            <h1>📊 ScreenTrace 统计面板</h1>
+            <h1>📊 ScreenTrace</h1>
             <p>智能屏幕活动追踪与分析</p>
+        </div>
+
+        <!-- 主题切换按钮 -->
+        <div class="theme-toggle">
+            <button id="themeToggle" aria-label="切换主题">
+                <span class="theme-icon">🌙</span>
+            </button>
         </div>
     </header>
 
+    <!-- 主容器 -->
     <div class="container">
+        <!-- 控制栏 -->
         <div class="controls">
             <div class="controls-left">
                 <label for="timeRange">时间范围：</label>
@@ -282,7 +40,9 @@
                     <option value="14">最近14天</option>
                     <option value="30">最近30天</option>
                 </select>
-                <button onclick="loadAllData()">🔄 手动刷新</button>
+                <button class="btn-primary" onclick="app.loadAllData()">
+                    🔄 手动刷新
+                </button>
             </div>
 
             <div class="controls-right">
@@ -300,29 +60,31 @@
             </div>
         </div>
 
-        <div class="stats-cards" id="statsCards">
-            <div class="stat-card">
+        <!-- 统计卡片 -->
+        <div class="stats-cards">
+            <div class="stat-card" data-id="totalCount">
                 <h3>总活动次数</h3>
                 <div class="value" id="totalCount">-</div>
                 <div class="label">截图记录</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" data-id="mainCategory">
                 <h3>主要活动</h3>
                 <div class="value" id="mainCategory">-</div>
                 <div class="label">生活维度</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" data-id="topApp">
                 <h3>常用应用</h3>
                 <div class="value" id="topApp">-</div>
                 <div class="label">使用最多</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" data-id="deepWork">
                 <h3>深度工作</h3>
                 <div class="value" id="deepWork">-</div>
                 <div class="label">会话次数</div>
             </div>
         </div>
 
+        <!-- 最近活动 -->
         <div class="recent-activity">
             <h2>🆕 最近活动</h2>
             <div class="activity-list" id="recentActivityList">
@@ -330,310 +92,52 @@
             </div>
         </div>
 
+        <!-- 图表网格 -->
         <div class="charts-grid">
             <div class="chart-container">
                 <h2>生活维度分布</h2>
-                <div id="categoryPieChart" class="loading">加载中...</div>
+                <div id="categoryPieChart">
+                    <div class="skeleton skeleton-chart"></div>
+                </div>
             </div>
 
             <div class="chart-container">
                 <h2>每日活动统计</h2>
-                <div id="dailyBarChart" class="loading">加载中...</div>
+                <div id="dailyBarChart">
+                    <div class="skeleton skeleton-chart"></div>
+                </div>
             </div>
 
             <div class="chart-container">
                 <h2>活动时段热力图</h2>
-                <div id="heatmapChart" class="loading">加载中...</div>
+                <div id="heatmapChart">
+                    <div class="skeleton skeleton-chart"></div>
+                </div>
             </div>
 
             <div class="chart-container">
                 <h2>活动趋势</h2>
-                <div id="trendChart" class="loading">加载中...</div>
+                <div id="trendChart">
+                    <div class="skeleton skeleton-chart"></div>
+                </div>
             </div>
         </div>
 
+        <!-- 应用使用统计 -->
         <div class="chart-container">
             <h2>应用使用统计</h2>
-            <div id="appUsageChart" class="loading">加载中...</div>
+            <div id="appUsageChart">
+                <div class="skeleton skeleton-chart"></div>
+            </div>
         </div>
     </div>
 
+    <!-- Footer -->
     <footer>
         <p>ScreenTrace v1.0 | 智能时间管理工具</p>
     </footer>
 
-    <script>
-        let autoRefreshTimer = null;
-
-        // 页面加载时初始化（等待所有资源加载完成，包括Plotly库）
-        window.onload = function() {
-            console.log('Window loaded, Plotly available:', typeof Plotly !== 'undefined');
-            loadAllData();
-            setupAutoRefresh();
-        };
-
-        // 设置自动刷新
-        function setupAutoRefresh() {
-            const autoRefreshCheckbox = document.getElementById('autoRefresh');
-            const refreshIntervalSelect = document.getElementById('refreshInterval');
-            const timeRangeSelect = document.getElementById('timeRange');
-
-            // 监听checkbox变化
-            autoRefreshCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    startAutoRefresh();
-                } else {
-                    stopAutoRefresh();
-                }
-            });
-
-            // 监听刷新间隔变化
-            refreshIntervalSelect.addEventListener('change', function() {
-                if (autoRefreshCheckbox.checked) {
-                    stopAutoRefresh();
-                    startAutoRefresh();
-                }
-            });
-
-            // 监听时间范围变化
-            timeRangeSelect.addEventListener('change', function() {
-                loadAllData();
-            });
-
-            // 初始启动自动刷新
-            if (autoRefreshCheckbox.checked) {
-                startAutoRefresh();
-            }
-        }
-
-        // 启动自动刷新
-        function startAutoRefresh() {
-            const interval = parseInt(document.getElementById('refreshInterval').value);
-            autoRefreshTimer = setInterval(loadAllData, interval * 1000);
-        }
-
-        // 停止自动刷新
-        function stopAutoRefresh() {
-            if (autoRefreshTimer) {
-                clearInterval(autoRefreshTimer);
-                autoRefreshTimer = null;
-            }
-        }
-
-        // 更新最后更新时间
-        function updateLastUpdateTime() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            document.getElementById('lastUpdate').textContent = `最后更新: ${timeStr}`;
-        }
-
-        // 加载所有数据
-        function loadAllData() {
-            const days = document.getElementById('timeRange').value;
-
-            loadRecentActivities();
-            loadStatsOverview(days);
-            loadCategoryPieChart(days);
-            loadDailyBarChart(days);
-            loadHeatmapChart(days);
-            loadTrendChart(days);
-            loadAppUsageChart(days);
-
-            updateLastUpdateTime();
-        }
-
-        // 加载最近活动
-        async function loadRecentActivities() {
-            try {
-                const response = await fetch('/api/recent-activities?limit=10');
-                const result = await response.json();
-
-                if (result.success) {
-                    const activities = result.data;
-                    const container = document.getElementById('recentActivityList');
-
-                    if (activities.length === 0) {
-                        container.innerHTML = '<div class="no-data">暂无数据</div>';
-                        return;
-                    }
-
-                    let html = '';
-                    activities.forEach(activity => {
-                        const time = activity.timestamp.substring(11, 19);
-                        const icon = getCategoryIcon(activity.category);
-                        const categoryClass = getCategoryClass(activity.category);
-
-                        html += `
-                            <div class="activity-item">
-                                <div class="activity-time">${time}</div>
-                                <div class="activity-icon">${icon}</div>
-                                <div class="activity-content">
-                                    <div class="activity-app">${activity.app}</div>
-                                    <div class="activity-desc">${activity.description}</div>
-                                </div>
-                                <div class="activity-category ${categoryClass}">${activity.category}</div>
-                            </div>
-                        `;
-                    });
-
-                    container.innerHTML = html;
-                }
-            } catch (error) {
-                console.error('加载最近活动失败:', error);
-                document.getElementById('recentActivityList').innerHTML = '<div class="no-data">加载失败</div>';
-            }
-        }
-
-        // 获取生活维度图标
-        function getCategoryIcon(category) {
-            const icons = {
-                '工作': '💼',
-                '学习': '📚',
-                '休闲': '🎮',
-                '生活': '🏠'
-            };
-            return icons[category] || '📌';
-        }
-
-        // 获取生活维度样式类
-        function getCategoryClass(category) {
-            const classes = {
-                '工作': 'category-work',
-                '学习': 'category-study',
-                '休闲': 'category-leisure',
-                '生活': 'category-life'
-            };
-            return classes[category] || '';
-        }
-
-        // 加载统计概览
-        async function loadStatsOverview(days) {
-            try {
-                const response = await fetch(`/api/stats/overview?days=${days}`);
-                const result = await response.json();
-
-                if (result.success) {
-                    const data = result.data;
-
-                    document.getElementById('totalCount').textContent = data.total_records || 0;
-
-                    // 主要活动
-                    if (data.life_category) {
-                        const mainCategory = Object.entries(data.life_category)
-                            .sort((a, b) => b[1] - a[1])[0];
-                        document.getElementById('mainCategory').textContent = mainCategory ? mainCategory[0] : '-';
-                    }
-
-                    // 常用应用
-                    if (data.top_apps) {
-                        const topApp = Object.keys(data.top_apps)[0];
-                        document.getElementById('topApp').textContent = topApp || '-';
-                    }
-
-                    // 深度工作（从效率指标获取）
-                    loadEfficiencyMetrics(days);
-                }
-            } catch (error) {
-                console.error('加载统计概览失败:', error);
-            }
-        }
-
-        // 加载效率指标
-        async function loadEfficiencyMetrics(days) {
-            try {
-                const response = await fetch(`/api/efficiency?days=${days}`);
-                const result = await response.json();
-
-                if (result.success) {
-                    document.getElementById('deepWork').textContent = result.data.deep_work_sessions || 0;
-                }
-            } catch (error) {
-                console.error('加载效率指标失败:', error);
-            }
-        }
-
-        // 加载饼图
-        async function loadCategoryPieChart(days) {
-            try {
-                const response = await fetch(`/api/chart/category-pie?days=${days}`);
-                const html = await response.text();
-                const container = document.getElementById('categoryPieChart');
-                container.innerHTML = html;
-                executeScripts(container);
-            } catch (error) {
-                document.getElementById('categoryPieChart').innerHTML = '<div class="error">加载失败</div>';
-            }
-        }
-
-        // 加载柱状图
-        async function loadDailyBarChart(days) {
-            try {
-                const response = await fetch(`/api/chart/daily-bar?days=${days}`);
-                const html = await response.text();
-                const container = document.getElementById('dailyBarChart');
-                container.innerHTML = html;
-                executeScripts(container);
-            } catch (error) {
-                document.getElementById('dailyBarChart').innerHTML = '<div class="error">加载失败</div>';
-            }
-        }
-
-        // 加载热力图
-        async function loadHeatmapChart(days) {
-            try {
-                const response = await fetch(`/api/chart/heatmap?days=${days}`);
-                const html = await response.text();
-                const container = document.getElementById('heatmapChart');
-                container.innerHTML = html;
-                executeScripts(container);
-            } catch (error) {
-                document.getElementById('heatmapChart').innerHTML = '<div class="error">加载失败</div>';
-            }
-        }
-
-        // 加载趋势图
-        async function loadTrendChart(days) {
-            try {
-                const response = await fetch(`/api/chart/trend?days=${days}`);
-                const html = await response.text();
-                const container = document.getElementById('trendChart');
-                container.innerHTML = html;
-                executeScripts(container);
-            } catch (error) {
-                document.getElementById('trendChart').innerHTML = '<div class="error">加载失败</div>';
-            }
-        }
-
-        // 加载应用使用图表
-        async function loadAppUsageChart(days) {
-            try {
-                const response = await fetch(`/api/chart/dashboard?days=${days}`);
-                const html = await response.text();
-                const container = document.getElementById('appUsageChart');
-                container.innerHTML = html;
-                executeScripts(container);
-            } catch (error) {
-                document.getElementById('appUsageChart').innerHTML = '<div class="error">加载失败</div>';
-            }
-        }
-
-        // 执行容器内的script标签
-        function executeScripts(container) {
-            const scripts = container.querySelectorAll('script');
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                if (oldScript.src) {
-                    newScript.src = oldScript.src;
-                } else {
-                    newScript.textContent = oldScript.textContent;
-                }
-                oldScript.parentNode.replaceChild(newScript, oldScript);
-            });
-        }
-    </script>
+    <!-- 模块化JavaScript (ES6 Module) -->
+    <script type="module" src="/static/js/app.js"></script>
 </body>
 </html>

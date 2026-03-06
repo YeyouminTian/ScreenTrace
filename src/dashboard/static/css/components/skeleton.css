@@ -1,0 +1,72 @@
+/**
+ * 骨架屏组件样式
+ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-secondary) 25%,
+    var(--color-bg-tertiary) 50%,
+    var(--color-bg-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 骨架屏变体 */
+.skeleton-card {
+  height: 120px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.skeleton-chart {
+  height: 300px;
+}
+
+.skeleton-text {
+  height: 16px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-text:last-child {
+  width: 60%;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+}
+
+/* 骨架屏包装器 */
+.skeleton-wrapper {
+  padding: var(--spacing-md);
+}
+
+/* 列表骨架屏 */
+.skeleton-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-content {
+  flex: 1;
+}
+
+/* 隐藏实际内容（加载时） */
+.skeleton-loading .actual-content {
+  display: none;
+}

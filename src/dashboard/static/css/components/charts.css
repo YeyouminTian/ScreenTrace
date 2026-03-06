@@ -1,0 +1,66 @@
+/**
+ * 图表容器组件样式
+ */
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  gap: var(--spacing-xxl);
+  margin-bottom: var(--spacing-xxl);
+}
+
+.chart-container {
+  background: var(--color-bg-primary);
+  padding: var(--spacing-xxl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border-light);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  animation: fadeIn 0.4s var(--ease-smooth);
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.chart-container.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chart-container h2 {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* 延迟加载效果 */
+.charts-grid .chart-container:nth-child(1) { animation-delay: 0.1s; }
+.charts-grid .chart-container:nth-child(2) { animation-delay: 0.2s; }
+.charts-grid .chart-container:nth-child(3) { animation-delay: 0.3s; }
+.charts-grid .chart-container:nth-child(4) { animation-delay: 0.4s; }
+
+/* 淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 响应式 */
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    padding: var(--spacing-lg);
+  }
+}

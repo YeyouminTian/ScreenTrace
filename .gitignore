@@ -40,6 +40,17 @@ reports/
 *.log
 config/settings.json
 .env
+CLAUDE.md
+
+# Claude Code
+.claude/
+
+# Obsidian notes
+ScreenTrace.README.md
+
+# Backup and test files
+*.backup
+test.html
 
 # Screenshots (test data)
 screenshots/

@@ -1,0 +1,61 @@
+/**
+ * 主样式入口
+ * 导入所有CSS模块
+ */
+
+/* 导入变量 */
+@import './variables.css';
+
+/* 导入组件 */
+@import './components/header.css';
+@import './components/controls.css';
+@import './components/cards.css';
+@import './components/charts.css';
+@import './components/activity-list.css';
+@import './components/skeleton.css';
+@import './components/buttons.css';
+@import './components/toast.css';
+
+/* 导入布局 */
+@import './layouts/grid.css';
+@import './layouts/responsive.css';
+
+/* 导入主题 */
+@import './themes/light.css';
+@import './themes/dark.css';
+
+/* ========== 全局基础样式 ========== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal),
+              color var(--transition-normal);
+}
+
+/* 平滑滚动 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 选中文本样式 */
+::selection {
+  background: var(--color-accent-primary);
+  color: white;
+}
+
+/* 全局过渡 */
+* {
+  transition: background-color var(--transition-fast),
+              color var(--transition-fast),
+              border-color var(--transition-fast);
+}

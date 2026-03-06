@@ -1,0 +1,149 @@
+/**
+ * CSS变量系统
+ * 定义全局设计token：颜色、间距、字体、圆角、阴影等
+ */
+
+:root {
+  /* ========== 配色系统 - 浅色模式 ========== */
+  /* 背景色 */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fa;
+  --color-bg-tertiary: #e9ecef;
+
+  /* 文字色 */
+  --color-text-primary: #1d1d1f;      /* 苹果标准黑 */
+  --color-text-secondary: #6e6e73;    /* 苹果灰 */
+  --color-text-tertiary: #86868b;     /* 浅灰 */
+
+  /* 强调色 */
+  --color-accent-primary: #0071e3;    /* 苹果蓝 */
+  --color-accent-secondary: #147ce5;  /* 浅蓝 */
+  --color-accent-tertiary: #e8f4fd;   /* 极浅蓝 */
+
+  /* 边框色 */
+  --color-border-light: rgba(0, 0, 0, 0.08);
+  --color-border-medium: rgba(0, 0, 0, 0.12);
+
+  /* 阴影色 */
+  --color-shadow-light: rgba(0, 0, 0, 0.04);
+  --color-shadow-medium: rgba(0, 0, 0, 0.08);
+  --color-shadow-heavy: rgba(0, 0, 0, 0.16);
+
+  /* ========== 间距系统 ========== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+
+  /* ========== 字体系统 ========== */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-xxl: 32px;
+  --font-size-xxxl: 36px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ========== 圆角系统 ========== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-xxl: 24px;
+  --radius-full: 9999px;
+
+  /* ========== 阴影系统 ========== */
+  --shadow-sm: 0 2px 8px var(--color-shadow-light);
+  --shadow-md: 0 4px 16px var(--color-shadow-medium);
+  --shadow-lg: 0 8px 24px var(--color-shadow-heavy);
+  --shadow-xl: 0 16px 48px var(--color-shadow-heavy);
+
+  /* 多层阴影（苹果风格） */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06),
+                 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 8px 16px rgba(0, 0, 0, 0.08),
+                       0 24px 48px rgba(0, 0, 0, 0.12);
+
+  /* ========== 动画系统 ========== */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* 贝塞尔曲线（苹果风格） */
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ========== 布局系统 ========== */
+  --max-width: 1400px;
+  --header-height: 120px;
+  --sidebar-width: 240px;
+
+  /* ========== 毛玻璃效果 ========== */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-blur: 20px;
+  --glass-saturate: 180%;
+
+  /* ========== z-index层级 ========== */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+}
+
+/* ========== 暗色模式 ========== */
+[data-theme="dark"] {
+  /* 背景色 */
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #1c1c1e;
+  --color-bg-tertiary: #2c2c2e;
+
+  /* 文字色 */
+  --color-text-primary: #f5f5f7;
+  --color-text-secondary: #a1a1a6;
+  --color-text-tertiary: #6e6e73;
+
+  /* 强调色 */
+  --color-accent-primary: #0a84ff;
+  --color-accent-secondary: #409cff;
+  --color-accent-tertiary: #1c3e5f;
+
+  /* 边框色 */
+  --color-border-light: rgba(255, 255, 255, 0.1);
+  --color-border-medium: rgba(255, 255, 255, 0.15);
+
+  /* 阴影色 */
+  --color-shadow-light: rgba(0, 0, 0, 0.2);
+  --color-shadow-medium: rgba(0, 0, 0, 0.3);
+  --color-shadow-heavy: rgba(0, 0, 0, 0.5);
+
+  /* 阴影 */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3),
+                 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover: 0 8px 16px rgba(0, 0, 0, 0.5),
+                       0 24px 48px rgba(0, 0, 0, 0.7);
+
+  /* 毛玻璃 */
+  --glass-bg: rgba(28, 28, 30, 0.72);
+}
+
+/* ========== 响应式断点（作为CSS变量） ========== */
+:root {
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --breakpoint-xxl: 1400px;
+}
