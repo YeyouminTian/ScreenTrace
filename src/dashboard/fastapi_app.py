@@ -189,13 +189,32 @@ async def api_docs():
 
 # ==================== 统计 API ====================
 
-@app.get("/api/stats/overview")
-async def get_stats_overview(days: int = Query(7, ge=1, le=365)):
-    """统计概览 API"""
-    try:
-        end_time = datetime.now()
+def parse_date_params(days: int, start_date: Optional[str], end_date: Optional[str]):
+    """解析日期参数，返回 start_time 和 end_time"""
+    end_time = datetime.now()
+
+    if start_date and end_date:
+        # 使用自定义日期范围
+        start_time = datetime.strptime(start_date, '%Y-%m-%d')
+        start_time = start_time.replace(hour=0, minute=0, second=0)
+        end_time = datetime.strptime(end_date, '%Y-%m-%d')
+        end_time = end_time.replace(hour=23, minute=59, second=59)
+    else:
+        # 使用天数
         start_time = end_time - timedelta(days=days)
 
+    return start_time, end_time
+
+
+@app.get("/api/stats/overview")
+async def get_stats_overview(
+    days: int = Query(7, ge=1, le=365),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None)
+):
+    """统计概览 API"""
+    try:
+        start_time, end_time = parse_date_params(days, start_date, end_date)
         stats = _db_manager.get_statistics(start_time, end_time)
 
         return {
@@ -211,11 +230,14 @@ async def get_stats_overview(days: int = Query(7, ge=1, le=365)):
 
 
 @app.get("/api/stats/kpi")
-async def get_kpi_metrics(days: int = Query(7, ge=1, le=365)):
+async def get_kpi_metrics(
+    days: int = Query(7, ge=1, le=365),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None)
+):
     """KPI 指标 API（模块 A）"""
     try:
-        end_time = datetime.now()
-        start_time = end_time - timedelta(days=days)
+        start_time, end_time = parse_date_params(days, start_date, end_date)
 
         metrics = _db_manager.get_kpi_metrics(start_time, end_time)
 
@@ -232,11 +254,14 @@ async def get_kpi_metrics(days: int = Query(7, ge=1, le=365)):
 
 
 @app.get("/api/stats/category")
-async def get_category_stats(days: int = Query(7, ge=1, le=365)):
+async def get_category_stats(
+    days: int = Query(7, ge=1, le=365),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None)
+):
     """生活维度统计 API（模块 C）"""
     try:
-        end_time = datetime.now()
-        start_time = end_time - timedelta(days=days)
+        start_time, end_time = parse_date_params(days, start_date, end_date)
 
         stats = _stats_analyzer.get_category_statistics(start_time, end_time)
 
@@ -255,11 +280,13 @@ async def get_category_stats(days: int = Query(7, ge=1, le=365)):
 @app.get("/api/stats/apps")
 async def get_app_stats(
     days: int = Query(7, ge=1, le=365),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
     top: int = Query(10, ge=1, le=50)
 ):
     """应用统计 API（模块 E）"""
     try:
-        end_time = datetime.now()
+        start_time, end_time = parse_date_params(days, start_date, end_date)
         start_time = end_time - timedelta(days=days)
 
         stats = _stats_analyzer.get_app_statistics(start_time, end_time, top)

@@ -3,8 +3,8 @@
  * 使用 ECharts 替代 Plotly 进行数据可视化
  */
 
-import { apiClient } from './api/client.js';
-import { API_ENDPOINTS, buildURL } from './api/endpoints.js';
+import { apiClient } from '../api/client.js';
+import { API_ENDPOINTS, buildURL } from '../api/endpoints.js';
 
 // ECharts 实例缓存
 const chartInstances = {};
@@ -107,13 +107,13 @@ export function initChart(containerId, options = {}) {
 /**
  * 渲染饼图
  */
-export async function renderCategoryPieChart(containerId, days = 7) {
+export async function renderCategoryPieChart(containerId, params = { days: 7 }) {
   const chart = initChart(containerId);
   if (!chart) return;
 
   try {
     const data = await apiClient.fetch(
-      buildURL(API_ENDPOINTS.CHART.CATEGORY_PIE, { days })
+      buildURL(API_ENDPOINTS.CHART.CATEGORY_PIE, params)
     );
 
     if (!data || data.length === 0) {
@@ -183,13 +183,13 @@ export async function renderCategoryPieChart(containerId, days = 7) {
 /**
  * 渲染柱状图
  */
-export async function renderDailyBarChart(containerId, days = 7) {
+export async function renderDailyBarChart(containerId, params = { days: 7 }) {
   const chart = initChart(containerId);
   if (!chart) return;
 
   try {
     const response = await apiClient.fetch(
-      buildURL(API_ENDPOINTS.CHART.DAILY_BAR, { days })
+      buildURL(API_ENDPOINTS.CHART.DAILY_BAR, params)
     );
 
     const theme = getCurrentTheme();
@@ -265,13 +265,13 @@ export async function renderDailyBarChart(containerId, days = 7) {
 /**
  * 渲染热力图
  */
-export async function renderHeatmapChart(containerId, days = 7) {
+export async function renderHeatmapChart(containerId, params = { days: 7 }) {
   const chart = initChart(containerId);
   if (!chart) return;
 
   try {
     const response = await apiClient.fetch(
-      buildURL(API_ENDPOINTS.CHART.HEATMAP, { days })
+      buildURL(API_ENDPOINTS.CHART.HEATMAP, params)
     );
 
     const theme = getCurrentTheme();
@@ -502,10 +502,10 @@ export function disposeAllCharts() {
 /**
  * 刷新所有图表
  */
-export async function refreshAllCharts(days = 7) {
+export async function refreshAllCharts(params = { days: 7 }) {
   await Promise.allSettled([
-    renderCategoryPieChart('categoryPieChart', days),
-    renderDailyBarChart('dailyBarChart', days),
-    renderHeatmapChart('heatmapChart', days)
+    renderCategoryPieChart('categoryPieChart', params),
+    renderDailyBarChart('dailyBarChart', params),
+    renderHeatmapChart('heatmapChart', params)
   ]);
 }

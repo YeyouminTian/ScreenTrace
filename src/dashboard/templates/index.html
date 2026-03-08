@@ -48,13 +48,23 @@
             <!-- Controls Bar -->
             <div class="controls-bar">
                 <div class="control-group">
-                    <label class="control-label" for="timeRange">时间范围</label>
-                    <select id="timeRange" class="btn btn-secondary">
-                        <option value="1">今天</option>
-                        <option value="7" selected>最近7天</option>
-                        <option value="14">最近14天</option>
-                        <option value="30">最近30天</option>
+                    <label class="control-label" for="dateType">时间范围</label>
+                    <select id="dateType" class="btn btn-secondary">
+                        <option value="today" selected>今天</option>
+                        <option value="yesterday">昨天</option>
+                        <option value="thisWeek">本周</option>
+                        <option value="lastWeek">上周</option>
+                        <option value="thisMonth">本月</option>
+                        <option value="lastMonth">上月</option>
+                        <option value="custom">自定义</option>
                     </select>
+                </div>
+
+                <!-- 自定义日期范围选择器 -->
+                <div class="control-group" id="customDateRange" style="display: none;">
+                    <input type="date" id="startDate" class="btn btn-secondary">
+                    <span style="color: var(--color-text-secondary);">至</span>
+                    <input type="date" id="endDate" class="btn btn-secondary">
                 </div>
 
                 <div class="control-group">
@@ -63,7 +73,7 @@
                             <path d="M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             <path d="M14 2V6H10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        刷新数据
+                        刷新
                     </button>
                 </div>
 
@@ -89,7 +99,7 @@
     <section class="stats-section">
         <div class="container">
             <header class="section-header">
-                <h3 class="section-title">今日概览</h3>
+                <h3 class="section-title" id="overviewTitle">今日概览</h3>
             </header>
             <div class="stats-grid">
                 <article class="stat-card">

@@ -73,14 +73,15 @@ class App {
    * 加载所有数据
    */
   async loadAllData() {
-    const days = appState.get('timeRange');
+    // 更新标题
+    this.updateOverviewTitle();
 
     // 并行加载所有数据
     const promises = [
       this.loadRecentActivities(),
-      this.loadStatsOverview(days),
+      this.loadStatsOverview(),
       this.loadKPI(),
-      this.loadEChartsCharts(days)
+      this.loadEChartsCharts()
     ];
 
     await Promise.allSettled(promises);
@@ -90,14 +91,15 @@ class App {
   /**
    * 加载 ECharts 图表
    */
-  async loadEChartsCharts(days) {
+  async loadEChartsCharts() {
     if (typeof echarts === 'undefined') {
       console.warn('[App] ECharts 不可用，跳过图表加载');
       return;
     }
 
     try {
-      await refreshAllCharts(days);
+      const params = this.getDateQueryParams();
+      await refreshAllCharts(params);
     } catch (error) {
       console.error('[App] 加载图表失败:', error);
     }
@@ -208,10 +210,12 @@ class App {
   /**
    * 加载统计概览
    */
-  async loadStatsOverview(days) {
+  async loadStatsOverview() {
+    const params = this.getDateQueryParams();
+
     try {
       const data = await apiClient.fetch(
-        buildURL(API_ENDPOINTS.STATS_OVERVIEW, { days })
+        buildURL(API_ENDPOINTS.STATS_OVERVIEW, params)
       );
 
       if (data) {
@@ -220,7 +224,7 @@ class App {
       }
 
       // 加载效率指标
-      await this.loadEfficiencyMetrics(days);
+      await this.loadEfficiencyMetrics();
 
     } catch (error) {
       console.error('加载统计概览失败:', error);
@@ -232,20 +236,25 @@ class App {
    * 更新统计卡片
    */
   updateStatsCards(data) {
-    document.getElementById('totalCount').textContent = data.total_records || 0;
+    const totalCountEl = document.getElementById('totalCount');
+    const mainCategoryEl = document.getElementById('mainCategory');
 
-    // 主要活动
-    if (data.life_category) {
-      const mainCategory = Object.entries(data.life_category)
-        .sort((a, b) => b[1] - a[1])[0];
-      document.getElementById('mainCategory').textContent =
-        mainCategory ? mainCategory[0] : '-';
+    if (totalCountEl) {
+      totalCountEl.textContent = data.total_records || 0;
     }
 
-    // 常用应用
-    if (data.top_apps) {
+    // 主要活动
+    if (mainCategoryEl && data.life_category) {
+      const mainCategory = Object.entries(data.life_category)
+        .sort((a, b) => b[1] - a[1])[0];
+      mainCategoryEl.textContent = mainCategory ? mainCategory[0] : '-';
+    }
+
+    // 常用应用 (如果存在元素)
+    const topAppEl = document.getElementById('topApp');
+    if (topAppEl && data.top_apps) {
       const topApp = Object.keys(data.top_apps)[0];
-      document.getElementById('topApp').textContent = topApp || '-';
+      topAppEl.textContent = topApp || '-';
     }
   }
 
@@ -273,9 +282,9 @@ class App {
    */
   async loadKPI() {
     try {
-      const days = appState.get('timeRange');
+      const params = this.getDateQueryParams();
       const data = await apiClient.fetch(
-        buildURL(API_ENDPOINTS.STATS_KPI, { days })
+        buildURL(API_ENDPOINTS.STATS_KPI, params)
       );
 
       if (data) {
@@ -403,7 +412,6 @@ class App {
         `;
 
         await this.loadAllData();
-        showSuccess('数据已刷新');
 
         refreshBtn.disabled = false;
         refreshBtn.innerHTML = btnText;
@@ -430,17 +438,159 @@ class App {
       }
     });
 
-    // 监听时间范围变化
-    timeRangeSelect.addEventListener('change', () => {
-      const days = parseInt(timeRangeSelect.value);
-      appState.set('timeRange', days);
-      this.loadAllData();
-    });
+    // 监听日期类型变化
+    const dateTypeSelect = document.getElementById('dateType');
+    const customDateRange = document.getElementById('customDateRange');
+
+    if (dateTypeSelect) {
+      dateTypeSelect.addEventListener('change', () => {
+        // 显示/隐藏自定义日期选择器
+        if (customDateRange) {
+          customDateRange.style.display = dateTypeSelect.value === 'custom' ? 'flex' : 'none';
+        }
+
+        this.loadAllData();
+      });
+    }
+
+    // 监听自定义日期变化
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+
+    if (startDate && endDate) {
+      // 设置默认日期范围（今天）
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      startDate.value = this.formatDate(today);
+      endDate.value = this.formatDate(today);
+
+      startDate.addEventListener('change', () => this.loadAllData());
+      endDate.addEventListener('change', () => this.loadAllData());
+    }
 
     // 初始启动自动刷新
     if (checkbox.checked) {
       this.startAutoRefresh();
     }
+  }
+
+  /**
+   * 格式化日期为 YYYY-MM-DD
+   */
+  formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * 获取当前日期范围
+   */
+  getDateRange() {
+    const dateType = document.getElementById('dateType')?.value || 'today';
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    let startDate = new Date();
+    let endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    switch (dateType) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        break;
+
+      case 'yesterday':
+        startDate.setDate(startDate.getDate() - 1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setDate(endDate.getDate() - 1);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      case 'thisWeek':
+        // 本周从周一开始
+        const dayOfWeek = startDate.getDay();
+        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startDate.setDate(startDate.getDate() - diff);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+
+      case 'lastWeek':
+        const lastWeekDayOfWeek = startDate.getDay();
+        const lastWeekDiff = lastWeekDayOfWeek === 0 ? 6 : lastWeekDayOfWeek - 1;
+        startDate.setDate(startDate.getDate() - lastWeekDiff - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setDate(startDate.getDate() + 6);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      case 'thisMonth':
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+
+      case 'lastMonth':
+        startDate.setMonth(startDate.getMonth() - 1);
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setDate(0); // 上月最后一天
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      case 'custom':
+        const customStart = document.getElementById('startDate')?.value;
+        const customEnd = document.getElementById('endDate')?.value;
+        if (customStart) {
+          startDate = new Date(customStart);
+          startDate.setHours(0, 0, 0, 0);
+        }
+        if (customEnd) {
+          endDate = new Date(customEnd);
+          endDate.setHours(23, 59, 59, 999);
+        }
+        break;
+
+      default:
+        startDate.setHours(0, 0, 0, 0);
+    }
+
+    // 计算天数
+    const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+    return { startDate, endDate, days };
+  }
+
+  /**
+   * 获取当前日期范围的查询参数
+   */
+  getDateQueryParams() {
+    const { startDate, endDate, days } = this.getDateRange();
+    return {
+      days: days,
+      start_date: this.formatDate(startDate),
+      end_date: this.formatDate(endDate)
+    };
+  }
+  updateOverviewTitle() {
+    const dateType = document.getElementById('dateType')?.value || 'today';
+    const titleEl = document.getElementById('overviewTitle');
+
+    if (!titleEl) return;
+
+    const titles = {
+      'today': '今日概览',
+      'yesterday': '昨日概览',
+      'thisWeek': '本周概览',
+      'lastWeek': '上周概览',
+      'thisMonth': '本月概览',
+      'lastMonth': '上月概览',
+      'custom': '自定义范围概览'
+    };
+
+    titleEl.textContent = titles[dateType] || '数据概览';
   }
 
   /**
