@@ -62,3 +62,6 @@ Thumbs.db
 # Distribution
 *.exe
 *.app
+
+# Design documents
+docs/

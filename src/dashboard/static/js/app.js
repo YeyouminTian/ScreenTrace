@@ -8,6 +8,14 @@ import { apiClient } from './api/client.js';
 import { API_ENDPOINTS, buildURL } from './api/endpoints.js';
 import { initTheme, toggleTheme } from './utils/theme.js';
 import { showToast, showSuccess, showError } from './utils/toast.js';
+import {
+  renderCategoryPieChart,
+  renderDailyBarChart,
+  renderHeatmapChart,
+  renderTimelineChart,
+  disposeAllCharts,
+  refreshAllCharts
+} from './charts/echarts-renderer.js';
 
 class App {
   constructor() {
@@ -31,16 +39,23 @@ class App {
       const theme = initTheme();
       console.log(`[App] 主题: ${theme}`);
 
-      // 2. 加载数据
+      // 2. 检查 ECharts 是否加载
+      if (typeof echarts === 'undefined') {
+        console.warn('[App] ECharts 未加载，尝试加载 Plotly 作为后备...');
+      } else {
+        console.log('[App] ECharts 已加载:', echarts);
+      }
+
+      // 3. 加载数据
       await this.loadAllData();
 
-      // 3. 设置自动刷新
+      // 4. 设置自动刷新
       this.setupAutoRefresh();
 
-      // 4. 设置主题切换监听
+      // 5. 设置主题切换监听
       this.setupThemeToggle();
 
-      // 5. 设置滚动观察器（图表入场动画）
+      // 6. 设置滚动观察器（图表入场动画）
       this.setupScrollObserver();
 
       this.isInitialized = true;
@@ -64,15 +79,28 @@ class App {
     const promises = [
       this.loadRecentActivities(),
       this.loadStatsOverview(days),
-      this.loadCategoryPieChart(days),
-      this.loadDailyBarChart(days),
-      this.loadHeatmapChart(days),
-      this.loadTrendChart(days),
-      this.loadAppUsageChart(days)
+      this.loadKPI(),
+      this.loadEChartsCharts(days)
     ];
 
     await Promise.allSettled(promises);
     this.updateLastUpdateTime();
+  }
+
+  /**
+   * 加载 ECharts 图表
+   */
+  async loadEChartsCharts(days) {
+    if (typeof echarts === 'undefined') {
+      console.warn('[App] ECharts 不可用，跳过图表加载');
+      return;
+    }
+
+    try {
+      await refreshAllCharts(days);
+    } catch (error) {
+      console.error('[App] 加载图表失败:', error);
+    }
   }
 
   /**
@@ -167,10 +195,12 @@ class App {
    */
   getCategoryIcon(category) {
     const icons = {
-      '工作': '💼',
-      '学习': '📚',
-      '休闲': '🎮',
-      '生活': '🏠'
+      'work': '💼',
+      'study': '📚',
+      'leisure': '🎮',
+      'life': '🏠',
+      'social': '💬',
+      'other': '📌'
     };
     return icons[category] || '📌';
   }
@@ -239,7 +269,50 @@ class App {
   }
 
   /**
-   * 加载图表（通用方法）
+   * 加载 KPI 指标（模块 A）
+   */
+  async loadKPI() {
+    try {
+      const days = appState.get('timeRange');
+      const data = await apiClient.fetch(
+        buildURL(API_ENDPOINTS.STATS_KPI, { days })
+      );
+
+      if (data) {
+        // 更新 KPI 卡片
+        const totalDuration = document.getElementById('totalDuration');
+        const focusScore = document.getElementById('focusScore');
+        const contextSwitches = document.getElementById('contextSwitches');
+        const maxFocusDuration = document.getElementById('maxFocusDuration');
+
+        if (totalDuration) {
+          const hours = Math.floor(data.total_duration_minutes / 60);
+          const mins = Math.round(data.total_duration_minutes % 60);
+          totalDuration.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+        }
+
+        if (focusScore) {
+          focusScore.textContent = data.focus_score || 0;
+        }
+
+        if (contextSwitches) {
+          contextSwitches.textContent = data.context_switches || 0;
+        }
+
+        if (maxFocusDuration) {
+          maxFocusDuration.textContent = data.max_focus_duration || 0;
+        }
+
+        appState.set('data.kpi', data);
+      }
+    } catch (error) {
+      console.error('加载KPI指标失败:', error);
+    }
+  }
+
+  /**
+   * 加载图表（通用方法 - 后备）
+   * 保留用于兼容旧的 Flask API 返回 HTML 的情况
    */
   async loadChart(chartId, endpoint, params) {
     const container = document.getElementById(chartId);
@@ -260,25 +333,36 @@ class App {
     }
   }
 
-  // 各个图表加载方法
+  // 保留旧方法以兼容旧的 Flask API
   loadCategoryPieChart(days) {
-    return this.loadChart('categoryPieChart', API_ENDPOINTS.CHART.CATEGORY_PIE, { days });
+    // 新版本使用 ECharts
+    if (typeof echarts !== 'undefined') {
+      return renderCategoryPieChart('categoryPieChart', days);
+    }
+    // 回退到旧的 HTML 加载
+    return this.loadChart('categoryPieChart', API_ENDPOINTS.CHART.CATEGORY_PIE_HTML, { days });
   }
 
   loadDailyBarChart(days) {
-    return this.loadChart('dailyBarChart', API_ENDPOINTS.CHART.DAILY_BAR, { days });
+    if (typeof echarts !== 'undefined') {
+      return renderDailyBarChart('dailyBarChart', days);
+    }
+    return this.loadChart('dailyBarChart', API_ENDPOINTS.CHART.DAILY_BAR_HTML, { days });
   }
 
   loadHeatmapChart(days) {
-    return this.loadChart('heatmapChart', API_ENDPOINTS.CHART.HEATMAP, { days });
+    if (typeof echarts !== 'undefined') {
+      return renderHeatmapChart('heatmapChart', days);
+    }
+    return this.loadChart('heatmapChart', API_ENDPOINTS.CHART.HEATMAP_HTML, { days });
   }
 
   loadTrendChart(days) {
-    return this.loadChart('trendChart', API_ENDPOINTS.CHART.TREND, { days });
+    return this.loadChart('trendChart', API_ENDPOINTS.CHART.TREND_HTML, { days });
   }
 
   loadAppUsageChart(days) {
-    return this.loadChart('appUsageChart', API_ENDPOINTS.CHART.DASHBOARD, { days });
+    return this.loadChart('appUsageChart', API_ENDPOINTS.CHART.DASHBOARD_HTML, { days });
   }
 
   /**

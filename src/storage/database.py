@@ -35,29 +35,47 @@ class DatabaseManager:
         # 创建表
         self._create_tables()
 
+        # 迁移现有数据库（添加新字段）
+        self.migrate_add_new_fields()
+
         logger.info(f"数据库初始化成功: {self.db_path}")
 
     def _create_tables(self) -> None:
         """创建数据库表"""
         cursor = self.connection.cursor()
 
-        # 截图记录表
+        # 检查表是否已存在
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS screenshots (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp DATETIME NOT NULL,
-                app_name TEXT,
-                window_title TEXT,
-                life_category TEXT,
-                activity_form TEXT,
-                description TEXT,
-                keywords TEXT,
-                screenshot_path TEXT NOT NULL,
-                similarity_score REAL,
-                api_called BOOLEAN DEFAULT 0,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
+            SELECT name FROM sqlite_master
+            WHERE type='table' AND name='screenshots'
         """)
+        table_exists = cursor.fetchone() is not None
+
+        if table_exists:
+            # 表已存在，检查并添加新列
+            self._migrate_add_columns(cursor)
+        else:
+            # 表不存在，创建新表
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS screenshots (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp DATETIME NOT NULL,
+                    app_name TEXT,
+                    window_title TEXT,
+                    life_category TEXT,
+                    activity_form TEXT,
+                    description TEXT,
+                    keywords TEXT,
+                    screenshot_path TEXT NOT NULL,
+                    similarity_score REAL,
+                    api_called BOOLEAN DEFAULT 0,
+                    status TEXT DEFAULT 'ok',
+                    confidence TEXT DEFAULT 'high',
+                    is_continuation BOOLEAN DEFAULT 0,
+                    sensitive_flag BOOLEAN DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
 
         # 创建索引
         cursor.execute("""
@@ -75,34 +93,76 @@ class DatabaseManager:
             ON screenshots(app_name)
         """)
 
-        # API调用日志表
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS api_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp DATETIME NOT NULL,
-                provider TEXT,
-                model TEXT,
-                tokens_used INTEGER,
-                cost REAL,
-                success BOOLEAN,
-                error_message TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
+            CREATE INDEX IF NOT EXISTS idx_status
+            ON screenshots(status)
         """)
 
-        # 系统日志表
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS system_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp DATETIME NOT NULL,
-                event_type TEXT,
-                event_data TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
+            CREATE INDEX IF NOT EXISTS idx_confidence
+            ON screenshots(confidence)
+        """)
+
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_is_continuation
+            ON screenshots(is_continuation)
         """)
 
         self.connection.commit()
         logger.info("数据库表创建成功")
+
+    def _migrate_add_columns(self, cursor) -> None:
+        """迁移现有表，添加新列（如果不存在）"""
+        # 获取当前表的所有列
+        cursor.execute("PRAGMA table_info(screenshots)")
+        existing_columns = {row[1] for row in cursor.fetchall()}
+
+        # 需要添加的新列
+        new_columns = {
+            'status': "ALTER TABLE screenshots ADD COLUMN status TEXT DEFAULT 'ok'",
+            'confidence': "ALTER TABLE screenshots ADD COLUMN confidence TEXT DEFAULT 'high'",
+            'is_continuation': "ALTER TABLE screenshots ADD COLUMN is_continuation BOOLEAN DEFAULT 0",
+            'sensitive_flag': "ALTER TABLE screenshots ADD COLUMN sensitive_flag BOOLEAN DEFAULT 0"
+        }
+
+        for column, sql in new_columns.items():
+            if column not in existing_columns:
+                try:
+                    cursor.execute(sql)
+                    logger.info(f"迁移成功：添加列 {column}")
+                except sqlite3.OperationalError as e:
+                    # 忽略列已存在的错误
+                    if 'duplicate column' not in str(e).lower():
+                        logger.warning(f"迁移列 {column} 时警告: {e}")
+
+        self.connection.commit()
+
+    def migrate_add_new_fields(self) -> None:
+        """迁移数据库：添加新字段（用于现有数据库升级）"""
+        cursor = self.connection.cursor()
+
+        try:
+            cursor.execute("ALTER TABLE screenshots ADD COLUMN status TEXT DEFAULT 'ok'")
+        except sqlite3.OperationalError:
+            pass  # 字段已存在
+
+        try:
+            cursor.execute("ALTER TABLE screenshots ADD COLUMN confidence TEXT DEFAULT 'high'")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            cursor.execute("ALTER TABLE screenshots ADD COLUMN is_continuation BOOLEAN DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            cursor.execute("ALTER TABLE screenshots ADD COLUMN sensitive_flag BOOLEAN DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+
+        self.connection.commit()
+        logger.info("数据库迁移完成：新字段已添加")
 
     def insert_screenshot(
         self,
@@ -115,7 +175,11 @@ class DatabaseManager:
         description: Optional[str] = None,
         keywords: Optional[List[str]] = None,
         similarity_score: Optional[float] = None,
-        api_called: bool = False
+        api_called: bool = False,
+        status: str = 'ok',
+        confidence: str = 'high',
+        is_continuation: bool = False,
+        sensitive_flag: bool = False
     ) -> int:
         """插入截图记录"""
         cursor = self.connection.cursor()
@@ -125,8 +189,9 @@ class DatabaseManager:
         cursor.execute("""
             INSERT INTO screenshots
             (timestamp, app_name, window_title, life_category, activity_form,
-             description, keywords, screenshot_path, similarity_score, api_called)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             description, keywords, screenshot_path, similarity_score, api_called,
+             status, confidence, is_continuation, sensitive_flag)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             timestamp.isoformat(),
             app_name,
@@ -137,7 +202,11 @@ class DatabaseManager:
             keywords_json,
             screenshot_path,
             similarity_score,
-            api_called
+            api_called,
+            status,
+            confidence,
+            is_continuation,
+            sensitive_flag
         ))
 
         self.connection.commit()
@@ -202,6 +271,34 @@ class DatabaseManager:
             results.append(record)
 
         return results
+
+    def get_last_analyzed_screenshot(self) -> Optional[Dict[str, Any]]:
+        """获取最后一条有API分析结果的截图记录"""
+        cursor = self.connection.cursor()
+        cursor.execute("""
+            SELECT * FROM screenshots
+            WHERE api_called = 1 AND life_category IS NOT NULL
+            ORDER BY timestamp DESC
+            LIMIT 1
+        """)
+        row = cursor.fetchone()
+
+        if not row:
+            return None
+
+        record = dict(row)
+        # 解析 keywords JSON
+        if record.get('keywords'):
+            try:
+                record['keywords'] = json.loads(record['keywords'])
+            except (json.JSONDecodeError, TypeError):
+                try:
+                    import ast
+                    record['keywords'] = ast.literal_eval(record['keywords'])
+                except (ValueError, SyntaxError):
+                    record['keywords'] = []
+
+        return record
 
     def get_statistics(
         self,
@@ -336,6 +433,262 @@ class DatabaseManager:
         ))
 
         self.connection.commit()
+
+    def migrate_add_new_fields(self) -> None:
+        """迁移数据库：添加新字段（用于现有数据库升级）"""
+        cursor = self.connection.cursor()
+
+        try:
+            cursor.execute("ALTER TABLE screenshots ADD COLUMN status TEXT DEFAULT 'ok'")
+        except sqlite3.OperationalError:
+            pass  # 字段已存在
+
+        try:
+            cursor.execute("ALTER TABLE screenshots ADD COLUMN confidence TEXT DEFAULT 'high'")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            cursor.execute("ALTER TABLE screenshots ADD COLUMN is_continuation BOOLEAN DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            cursor.execute("ALTER TABLE screenshots ADD COLUMN sensitive_flag BOOLEAN DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+
+        self.connection.commit()
+        logger.info("数据库迁移完成：新字段已添加")
+
+    def update_screenshot_analysis(
+        self,
+        record_id: int,
+        life_category: Optional[str] = None,
+        activity_form: Optional[str] = None,
+        description: Optional[str] = None,
+        keywords: Optional[List[str]] = None,
+        status: Optional[str] = None,
+        confidence: Optional[str] = None,
+        is_continuation: Optional[bool] = None,
+        sensitive_flag: Optional[bool] = None
+    ) -> None:
+        """更新截图记录的分析结果"""
+        cursor = self.connection.cursor()
+
+        updates = []
+        params = []
+
+        if life_category is not None:
+            updates.append("life_category = ?")
+            params.append(life_category)
+
+        if activity_form is not None:
+            updates.append("activity_form = ?")
+            params.append(activity_form)
+
+        if description is not None:
+            updates.append("description = ?")
+            params.append(description)
+
+        if keywords is not None:
+            updates.append("keywords = ?")
+            params.append(json.dumps(keywords, ensure_ascii=False))
+
+        if status is not None:
+            updates.append("status = ?")
+            params.append(status)
+
+        if confidence is not None:
+            updates.append("confidence = ?")
+            params.append(confidence)
+
+        if is_continuation is not None:
+            updates.append("is_continuation = ?")
+            params.append(is_continuation)
+
+        if sensitive_flag is not None:
+            updates.append("sensitive_flag = ?")
+            params.append(sensitive_flag)
+
+        updates.append("api_called = 1")
+
+        if updates:
+            params.append(record_id)
+            cursor.execute(f"""
+                UPDATE screenshots
+                SET {', '.join(updates)}
+                WHERE id = ?
+            """, params)
+
+            self.connection.commit()
+            logger.debug(f"更新截图记录: ID={record_id}")
+
+    def get_kpi_metrics(
+        self,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None
+    ) -> Dict[str, Any]:
+        """获取KPI指标（用于Dashboard模块A）"""
+        cursor = self.connection.cursor()
+
+        time_condition = ""
+        params = []
+
+        if start_time:
+            time_condition += " AND timestamp >= ?"
+            params.append(start_time.isoformat())
+
+        if end_time:
+            time_condition += " AND timestamp <= ?"
+            params.append(end_time.isoformat())
+
+        # 1. 总记录时长（所有 status=ok 的记录）
+        cursor.execute(f"""
+            SELECT MIN(timestamp) as first_record, MAX(timestamp) as last_record,
+                   COUNT(*) as total_count
+            FROM screenshots
+            WHERE status = 'ok' {time_condition}
+        """, params)
+
+        row = cursor.fetchone()
+        total_duration_minutes = 0
+        if row['first_record'] and row['last_record']:
+            first = datetime.fromisoformat(row['first_record'])
+            last = datetime.fromisoformat(row['last_record'])
+            total_duration_minutes = (last - first).total_seconds() / 60
+
+        # 2. 深度工作时长（work + creating，连续>=30分钟）
+        cursor.execute(f"""
+            SELECT COUNT(*) as deep_work_count
+            FROM screenshots
+            WHERE life_category = 'work'
+              AND activity_form = 'creating'
+              AND status = 'ok' {time_condition}
+        """, params)
+
+        deep_work_count = cursor.fetchone()['deep_work_count'] or 0
+
+        # 3. 上下文切换次数（is_continuation=false 的记录数）
+        cursor.execute(f"""
+            SELECT COUNT(*) as switch_count
+            FROM screenshots
+            WHERE is_continuation = 0 {time_condition}
+        """, params)
+
+        context_switches = cursor.fetchone()['switch_count'] or 0
+
+        # 4. 置信度统计
+        cursor.execute(f"""
+            SELECT confidence, COUNT(*) as count
+            FROM screenshots
+            WHERE 1=1 {time_condition}
+            GROUP BY confidence
+        """, params)
+
+        confidence_stats = {row['confidence']: row['count'] for row in cursor.fetchall()}
+        total_for_confidence = sum(confidence_stats.values()) or 1
+        low_confidence_ratio = confidence_stats.get('low', 0) / total_for_confidence
+
+        # 5. 状态统计
+        cursor.execute(f"""
+            SELECT status, COUNT(*) as count
+            FROM screenshots
+            WHERE 1=1 {time_condition}
+            GROUP BY status
+        """, params)
+
+        status_stats = {row['status']: row['count'] for row in cursor.fetchall()}
+        unrecognizable_ratio = status_stats.get('unrecognizable', 0) / total_for_confidence
+
+        # 6. 最长专注段（通过 is_continuation 连续 true 计算）
+        cursor.execute(f"""
+            SELECT timestamp, is_continuation, life_category
+            FROM screenshots
+            WHERE 1=1 {time_condition}
+            ORDER BY timestamp ASC
+        """, params)
+
+        records = cursor.fetchall()
+        max_focus_duration = 0
+        current_focus = 0
+        current_category = None
+
+        for record in records:
+            if record['is_continuation'] and record['life_category'] == current_category:
+                current_focus += 1
+            else:
+                if current_focus > max_focus_duration:
+                    max_focus_duration = current_focus
+                current_focus = 1 if record['is_continuation'] else 0
+                current_category = record['life_category']
+
+        if current_focus > max_focus_duration:
+            max_focus_duration = current_focus
+
+        # 7. 综合专注度得分
+        total_records = row['total_count'] or 1
+        deep_work_ratio = deep_work_count / total_records
+        switch_rate = context_switches / total_records
+
+        focus_score = (
+            deep_work_ratio * 0.4 +
+            (max_focus_duration / max(total_records, 1)) * 0.3 +
+            (1 - min(switch_rate, 1)) * 0.3
+        ) * 100
+
+        return {
+            'total_duration_minutes': round(total_duration_minutes, 1),
+            'deep_work_count': deep_work_count,
+            'context_switches': context_switches,
+            'focus_score': round(focus_score, 1),
+            'max_focus_duration': max_focus_duration,
+            'low_confidence_ratio': round(low_confidence_ratio * 100, 1),
+            'unrecognizable_ratio': round(unrecognizable_ratio * 100, 1),
+            'total_records': row['total_count'] or 0
+        }
+
+    def get_timeline_data(
+        self,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None
+    ) -> List[Dict[str, Any]]:
+        """获取时间线数据（用于Dashboard模块B）"""
+        cursor = self.connection.cursor()
+
+        time_condition = ""
+        params = []
+
+        if start_time:
+            time_condition += " AND timestamp >= ?"
+            params.append(start_time.isoformat())
+
+        if end_time:
+            time_condition += " AND timestamp <= ?"
+            params.append(end_time.isoformat())
+
+        cursor.execute(f"""
+            SELECT timestamp, app_name, window_title, life_category,
+                   activity_form, description, is_continuation, screenshot_path
+            FROM screenshots
+            WHERE status = 'ok' {time_condition}
+            ORDER BY timestamp ASC
+        """, params)
+
+        rows = cursor.fetchall()
+        results = []
+
+        for row in rows:
+            record = dict(row)
+            # 解析 keywords
+            if record.get('keywords'):
+                try:
+                    record['keywords'] = json.loads(record['keywords'])
+                except (json.JSONDecodeError, TypeError):
+                    record['keywords'] = []
+            results.append(record)
+
+        return results
 
     def close(self) -> None:
         """关闭数据库连接"""
