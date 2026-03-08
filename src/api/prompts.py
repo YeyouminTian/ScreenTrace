@@ -17,75 +17,112 @@ class PromptTemplates:
         Returns:
             标准化的提示词
         """
-        return """你是一个活动记录助手。请分析这张屏幕截图，提取以下信息：
+        return """# 角色
+你是 ScreenTrace 活动记录助手，负责分析用户的屏幕截图，结构化提取当前活动信息。
 
-1. 【应用名称】：当前使用的应用或网站
+# 输入上下文
+- 当前截图时间：{{timestamp}}
+- 上一次截图的分析结果（可能为空）：{{previous_result}}
 
-2. 【生活维度】：从以下分类中选择最匹配的
-   - 工作（职业相关活动）
-   - 学习（自我提升、教育相关）
-   - 休闲（娱乐、放松）
-   - 生活（日常事务）
-   - 其他（请注明）
+# 分析规则
 
-3. 【活动形式】：从以下分类中选择
-   - 创作/操作（编写、设计、操作软件）
-   - 阅读/观看（文档、视频、文章）
-   - 沟通协作（会议、聊天、邮件）
-   - 浏览检索（搜索、浏览网页）
-   - 其他（请注明）
+## Step 1：屏幕状态判断
+首先判断截图是否可分析：
+- 如果是锁屏、黑屏、息屏、系统加载画面、截图模糊无法识别，则直接返回 `"status": "unrecognizable"`
+- 如果可分析，返回 `"status": "ok"` 并继续以下步骤
+- **聚焦前景窗口**，忽略被遮挡的背景窗口
 
-4. 【详细描述】：描述具体在做什么（包含内容主题+具体活动）
-   格式：<活动动词> + <内容主题> + <具体细节>
-   示例：
-   - "观看 Python 多线程教程视频"
-   - "阅读《海贼王》漫画"
-   - "编写用户认证模块代码"
-   - "浏览京东购物网站"
+## Step 2：结构化提取
 
-5. 【关键词】：提取3-5个关键词
-   示例：Python, 多线程, 教程 或 漫画, 海贼王, 休闲
+### 2.1 应用名称（app）
+- 识别当前前景应用或网站名称
+- 如果是浏览器，请同时标注浏览器名称和当前网站，如 "Chrome - YouTube"
 
-请以JSON格式输出：
+### 2.2 生活维度（life_category）
+从以下枚举中选择 **最匹配的一项**：
+
+| 枚举值 | 含义 |
+|---|---|
+| work | 职业相关：编程、文档、项目管理、邮件处理等 |
+| study | 学习提升：教程、课程、技术文档阅读、刷题等 |
+| leisure | 休闲娱乐：影视、游戏、社交媒体浏览、漫画等 |
+| life | 日常生活：购物、理财、出行规划、健康管理等 |
+| social | 社交沟通：非工作性质的即时聊天、社交平台互动 |
+| other | 无法归入以上类别 |
+
+### 2.3 活动形式（activity_form）
+从以下枚举中选择 **最匹配的一项**：
+
+| 枚举值 | 含义 |
+|---|---|
+| creating | 创作/操作：编写代码、设计图形、编辑文档等 |
+| consuming | 阅读/观看：看视频、读文章、浏览文档等 |
+| communicating | 沟通协作：会议、聊天、邮件、评论等 |
+| browsing | 浏览检索：搜索引擎、商品浏览、信息流等 |
+| operating | 系统操作：文件管理、设置调整、安装软件等 |
+| other | 无法归入以上类别 |
+
+### 2.4 详细描述（description）
+- 格式：`<动词> + <内容主题> + <具体细节>`
+- 控制在 15-40 个字
+- **不得包含截图中可见的个人隐私信息**（姓名、账号、密码、私人对话内容等），用通用描述替代
+- 示例："观看 Python 异步编程教程视频"、"在电商平台浏览数码产品"
+
+### 2.5 关键词（keywords）
+- 提取 3-5 个关键词，用于后续聚合统计
+- 偏向**主题和工具**，避免动词
+
+### 2.6 置信度（confidence）
+- 对本次分析结果的整体置信度评分：high / medium / low
+- 如果画面模糊、信息量少、难以判断，应如实标注 low
+
+### 2.7 活动连续性（is_continuation）
+- 对比 `{{previous_result}}`，判断当前活动是否是上一次的延续
+- `true`：同一应用、同一任务的继续
+- `false`：切换了新活动
+- `null`：无上一次记录或无法判断
+
+# 输出格式
+严格输出以下 JSON，不要添加任何额外文字：
+
 {
-  "app": "应用名称",
-  "life_category": "生活维度",
-  "activity_form": "活动形式",
-  "description": "详细描述",
-  "keywords": ["关键词1", "关键词2"]
-}"""
+  "status": "ok | unrecognizable",
+  "app": "string",
+  "life_category": "work | study | leisure | life | social | other",
+  "activity_form": "creating | consuming | communicating | browsing | operating | other",
+  "description": "string",
+  "keywords": ["string"],
+  "confidence": "high | medium | low",
+  "is_continuation": true | false | null,
+  "sensitive_flag": false
+}
+
+# 特殊说明
+- 如果截图中包含明显的隐私/敏感内容（密码输入框、私密聊天等），将 `sensitive_flag` 设为 `true`，并在 description 中进行脱敏处理
+- 如果 status 为 "unrecognizable"，其他字段全部填 null"""
 
     @staticmethod
     def get_context_aware_prompt(
-        previous_description: str,
-        previous_app: str,
-        time_gap_minutes: float
+        previous_result: str,
+        timestamp: str
     ) -> str:
         """
         获取带上下文的Prompt模板
 
         Args:
-            previous_description: 上一个任务描述
-            previous_app: 上一个应用名
-            time_gap_minutes: 距离上次截图的时间（分钟）
+            previous_result: 上一次截图的完整分析结果（JSON格式）
+            timestamp: 当前截图的时间戳
 
         Returns:
             带上下文的提示词
         """
         base_prompt = PromptTemplates.get_screenshot_analysis_prompt()
 
-        context = f"""
+        # 替换占位符
+        base_prompt = base_prompt.replace("{{timestamp}}", timestamp)
+        base_prompt = base_prompt.replace("{{previous_result}}", previous_result or "无")
 
-【上下文信息】
-- 上次活动：{previous_description}
-- 上次应用：{previous_app}
-- 时间间隔：{time_gap_minutes:.1f}分钟
-
-如果当前截图与上次活动相同或延续，请在描述中体现连续性。
-例如："继续编写用户认证模块代码" 而非 "编写用户认证模块代码"
-"""
-
-        return base_prompt + context
+        return base_prompt
 
     @staticmethod
     def get_narrative_report_prompt(
@@ -166,31 +203,35 @@ class PromptBuilder:
     def build_analysis_prompt(
         self,
         previous_data: Dict[str, Any] = None,
-        time_gap_minutes: float = None
+        timestamp: str = None
     ) -> str:
         """
         构建截图分析Prompt
 
         Args:
-            previous_data: 上一次的截图分析数据
-            time_gap_minutes: 时间间隔（分钟）
+            previous_data: 上一次的截图分析数据（字典格式）
+            timestamp: 当前截图的时间戳
 
         Returns:
             完整的提示词
         """
-        # 如果启用上下文且有历史数据
-        if (self.use_context and
-            previous_data and
-            time_gap_minutes is not None):
+        import json
 
+        # 如果启用上下文且有历史数据
+        if self.use_context and previous_data:
+            # 将上一次结果转换为JSON字符串
+            previous_json = json.dumps(previous_data, ensure_ascii=False)
             return self.templates.get_context_aware_prompt(
-                previous_description=previous_data.get('description', ''),
-                previous_app=previous_data.get('app', ''),
-                time_gap_minutes=time_gap_minutes
+                previous_result=previous_json,
+                timestamp=timestamp or ""
             )
 
-        # 否则返回基础Prompt
-        return self.templates.get_screenshot_analysis_prompt()
+        # 否则返回基础Prompt（不带上下文）
+        base_prompt = self.templates.get_screenshot_analysis_prompt()
+        # 替换占位符
+        base_prompt = base_prompt.replace("{{timestamp}}", timestamp or "")
+        base_prompt = base_prompt.replace("{{previous_result}}", "无")
+        return base_prompt
 
     def build_report_prompt(
         self,

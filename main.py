@@ -129,36 +129,67 @@ def main():
         def on_screenshot_taken(screenshot_path, timestamp, window, trigger_type):
             """截图完成回调 - 调用API分析截图"""
             try:
-                # 构建Prompt
-                prompt = prompt_builder.build_analysis_prompt()
+                # 获取上一次分析结果作为上下文
+                previous_data = db_manager.get_last_analyzed_screenshot()
+
+                # 格式化时间戳
+                timestamp_str = timestamp.isoformat() if timestamp else ""
+
+                # 构建带上下文的Prompt
+                prompt = prompt_builder.build_analysis_prompt(
+                    previous_data=previous_data,
+                    timestamp=timestamp_str
+                )
 
                 # 调用API分析截图
                 logger.info(f"正在分析截图: {screenshot_path}")
                 analysis_result = api_client.analyze_image(screenshot_path, prompt)
 
                 if analysis_result:
-                    # 提取分析结果
+                    # 提取分析结果（兼容新旧字段）
                     app_name = analysis_result.get('app', window.process_name if window else '')
                     life_category = analysis_result.get('life_category', '')
                     activity_form = analysis_result.get('activity_form', '')
                     description = analysis_result.get('description', '')
                     keywords = analysis_result.get('keywords', [])
 
-                    # 保存到数据库
-                    db_manager.insert_screenshot(
-                        timestamp=timestamp,
-                        screenshot_path=screenshot_path,
-                        app_name=app_name,
-                        window_title=window.title if window else None,
-                        life_category=life_category,
-                        activity_form=activity_form,
-                        description=description,
-                        keywords=keywords,
-                        api_called=True
-                    )
+                    # 新增字段（可选，用于后续分析）
+                    status = analysis_result.get('status', 'ok')
+                    confidence = analysis_result.get('confidence', 'medium')
+                    is_continuation = analysis_result.get('is_continuation')
+                    sensitive_flag = analysis_result.get('sensitive_flag', False)
+
+                    # 如果状态为 unrecognizable，标记为未识别
+                    if status == 'unrecognizable':
+                        logger.info("截图无法识别（锁屏/黑屏等）")
+                        # 仍然保存记录，但标记 api_called 为 False
+                        db_manager.insert_screenshot(
+                            timestamp=timestamp,
+                            screenshot_path=screenshot_path,
+                            app_name=app_name,
+                            window_title=window.title if window else None,
+                            api_called=True  # API已调用，只是返回unrecognizable
+                        )
+                    else:
+                        # 正常保存分析结果
+                        db_manager.insert_screenshot(
+                            timestamp=timestamp,
+                            screenshot_path=screenshot_path,
+                            app_name=app_name,
+                            window_title=window.title if window else None,
+                            life_category=life_category,
+                            activity_form=activity_form,
+                            description=description,
+                            keywords=keywords,
+                            api_called=True
+                        )
+
+                        logger.info(
+                            f"截图分析完成: {description} "
+                            f"[{life_category}/{activity_form}]"
+                        )
 
                     # 记录成本（估算）
-                    # 注意：这里使用估算值，实际应从API响应中获取
                     input_tokens = cost_tracker.estimate_tokens(prompt)
                     output_tokens = cost_tracker.estimate_tokens(str(analysis_result))
 
@@ -168,11 +199,6 @@ def main():
                         input_tokens=input_tokens,
                         output_tokens=output_tokens,
                         success=True
-                    )
-
-                    logger.info(
-                        f"截图分析完成: {description} "
-                        f"[{life_category}/{activity_form}]"
                     )
                 else:
                     # API调用失败，仍保存基础信息
